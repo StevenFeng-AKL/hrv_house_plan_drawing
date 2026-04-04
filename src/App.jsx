@@ -23,7 +23,8 @@ function App() {
     // Token Validation Logic (Secret Formula: length of address * 314)
     const expectedToken = String(address.length * 314);
     
-    if (address && token === expectedToken) {
+    // Allow master code bypass '314417' OR valid address calculation
+    if (token === "314417" || (address && token === expectedToken)) {
       setIsAuthorized(true);
     } else {
       setIsAuthorized(false);
