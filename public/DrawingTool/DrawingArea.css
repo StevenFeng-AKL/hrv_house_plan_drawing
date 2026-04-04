@@ -1,0 +1,274 @@
+#drawing_area
+{
+    padding-top:50px;
+    padding-bottom:20px;
+}
+
+#icons {
+    display: flex;
+    flex-wrap: wrap;
+    height: 100%;
+    margin-bottom: 5px;
+}
+
+
+#icons > * {
+    cursor: pointer;
+    flex-basis: auto;
+    width: 48%;
+    height: 48px;
+    box-sizing: border-box;
+    border: 1px solid black;
+    display: flex;
+    justify-content: center;
+    padding: 5px 5px 5px 5px;
+    background-color: #eeeeee;
+    text-decoration: none;
+    border: 1px solid #aaaaaa;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+
+.toolPreview {
+    border: 1px solid #aaaaaa;
+    margin-bottom: 5px;
+    height: 50px;
+}
+
+.toolPreview > * {
+    width: 100%;
+}
+
+#icons > *:active {
+    background-color: #aaaaaa;
+}
+
+#icons img {
+    max-width: 90%;
+    height: auto;
+}
+
+.top-left {
+    margin: 0 2% 2% 0;
+}
+
+.top-right {
+    margin: 0 0 2% 2%;
+}
+
+.bottom-left {
+    margin: 2% 2% 0 0;
+}
+
+.bottom-right {
+    margin: 2% 0 0 2%;
+}
+
+#drawing_area canvas.drawing
+{
+    border:1px solid black;
+    cursor: crosshair;
+    float:left;
+}
+
+#drawing_area canvas.key
+{
+    border:1px solid black;
+    border-top: 0px solid transparent;
+    float:left;
+}
+
+#drawing_area .tool_panel {
+    float: left;
+    width: 100px;
+    margin-right: 20px;
+}
+
+#drawing_area .tool_panel input[type="text"]
+{
+    border:1px solid #b3b3b3;
+}
+
+#drawing_area .tool_panel input[type="text"].error
+{
+    color:#BE0033;
+    border: 1px solid #BE0033;
+    background-color:#fff1f5;
+}
+
+#drawing_area .use_snap_container
+{
+    margin-bottom:5px;
+}
+        
+#drawing_area .tool_panel a
+{
+    display:block;
+    padding:10px 10px 10px 10px;
+    background-color:#eeeeee;
+    text-decoration:none;
+    border:1px solid #aaaaaa;
+    margin-bottom:5px;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+
+#drawing_area .tool_panel select
+{
+    margin-bottom:5px;
+    margin-top:10px;
+    box-sizing:border-box;
+    width:100%;
+}
+
+#drawing_area .tool_panel input[type="text"]
+{
+   box-sizing:border-box;
+   width:100%;
+   margin-bottom:5px;
+   margin-top:10px;
+}
+        
+#drawing_area .tool_panel a.colour
+{
+    padding:0px;
+    width:30%;
+    height:30px;
+    float:left;
+    margin:5%;
+    border:1px solid #666666;
+    display:block;
+}
+        
+#drawing_area .tool_panel a.colour:hover
+{
+    border-color:#000000;
+}
+        
+#drawing_area .tool_panel a.heatpump_tool
+{
+    background-color:#fdcfcc;
+    color:#680400;
+    border-color:#680400;
+}
+        
+#drawing_area .tool_panel a.heatpump_tool:hover
+{
+    background-color:#ffdbd9;
+}
+        
+#drawing_area .tool_panel a.heatpump_tool.placed
+{
+    background-color:#c4ffc3;
+    color:#025300;
+    border-color:#036f00;
+}
+        
+#drawing_area .tool_panel a.heatpump_tool.placed:hover
+{
+    background-color:#ddffdc;
+}
+
+/* Pagination */
+
+#drawing_area .pagination {
+    float: left;
+    width: 30%;
+    margin-left: 10%;
+}
+
+#drawing_area .pagination ul
+{
+    list-style-type:none;
+    margin:10px 0px 0px 0px;
+    padding:0px;
+}
+
+#drawing_area .pagination li
+{
+    float:left;
+}
+
+#drawing_area .pagination li a
+{
+    border:1px solid #be0033;
+    background-color:#fff5f8;
+    color:#be0033;
+    width:20px;
+    height:20px;
+    display:inline-block;
+    text-align:center;
+    vertical-align: middle;
+    margin:0px 10px 0px 0px;
+    cursor:pointer;
+}
+
+#drawing_area .pagination li a.current
+{
+    border:1px solid #64001b;
+    background-color:#be0033;
+    color:#ffffff;
+}
+
+#drawing_area .pagination li a.add_page,
+#drawing_area .pagination li a.remove_page
+{
+    border:1px solid #7b7b7b;
+    background-color:#e9e9e9;
+    color:#333333;
+}
+
+/* Background Tools */
+
+#drawing_area .background_tools
+{
+    float:right;
+    width: 50%;
+}
+
+#drawing_area .background_tools a
+{
+    display:inline-block;
+    padding:10px 10px 10px 10px;
+    background-color:#eeeeee;
+    text-decoration:none;
+    border:1px solid #aaaaaa;
+    margin-bottom:5px;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+
+#drawing_area .ventilation_tools a
+{
+    display:inline-block;
+    padding:10px 10px 10px 10px;
+    background-color:#eeeeee;
+    text-decoration:none;
+    border:1px solid #aaaaaa;
+    margin-right:5px;
+    margin-bottom:5px;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+
+.clear {
+    clear: both;
+}
+
+#drawing_area .save_section {
+    float:right;
+    margin-top: 10px;
+}
+
+#drawing_area .save_section a {
+    width: 100px;
+    text-align: center;
+    display:inline-block;
+    padding:10px 10px 10px 10px;
+    background-color:#eeeeee;
+    text-decoration:none;
+    border:1px solid #aaaaaa;
+    margin-bottom:5px;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
