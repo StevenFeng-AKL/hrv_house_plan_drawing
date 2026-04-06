@@ -131,7 +131,7 @@ window.submitWebhook = function() {
     })
     .then(data => {
         console.log('Success:', data);
-        alert('Successfully submitted drawing for quote: ' + (window.currentQuoteId || 'Unknown'));
+        alert('Successfully submitted house plan for ' + (window.currentAddress || 'unknown'));
     })
     .catch((error) => {
         console.error('Error:', error);
