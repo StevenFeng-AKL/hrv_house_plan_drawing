@@ -92,11 +92,14 @@ window.submitWebhook = function() {
         alert("Warning: The Submit function and Session JSON generation works best when hosted on a web server to avoid tainted canvas errors. Proceeding with dummy webhook...");
     }
 
-    var submitButton = document.querySelector('a[onclick="submitWebhook()"]');
-    var originalText = submitButton.innerText;
-    submitButton.innerText = "Submitting...";
-    submitButton.style.opacity = "0.7";
-    submitButton.style.pointerEvents = "none";
+    var submitButton = document.querySelector('a[onclick="submitWebhook()"]') || Array.from(document.querySelectorAll('a')).find(el => el.textContent.includes('Submit CRM'));
+    var originalText = "";
+    if (submitButton) {
+        originalText = submitButton.innerText;
+        submitButton.innerText = "Submitting...";
+        submitButton.style.opacity = "0.7";
+        submitButton.style.pointerEvents = "none";
+    }
 
     var jsonData = window.drawingArea.getData();
     var sessionDataObj = JSON.parse(jsonData);
@@ -132,9 +135,11 @@ window.submitWebhook = function() {
         alert('An error occurred during submission. Check the console for details.');
     })
     .finally(() => {
-        submitButton.innerText = originalText;
-        submitButton.style.opacity = "1";
-        submitButton.style.pointerEvents = "auto";
+        if (submitButton) {
+            submitButton.innerText = originalText;
+            submitButton.style.opacity = "1";
+            submitButton.style.pointerEvents = "auto";
+        }
     });
 };
 
