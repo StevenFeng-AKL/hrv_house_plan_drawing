@@ -122,8 +122,11 @@ window.submitWebhook = function() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
     })
-    .then(response => {
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    .then(async response => {
+        if (!response.ok) {
+            var text = await response.text();
+            throw new Error(`HTTP error! status: ${response.status}, body: ${text}`);
+        }
         return response.text().then(text => text ? JSON.parse(text) : {});
     })
     .then(data => {
