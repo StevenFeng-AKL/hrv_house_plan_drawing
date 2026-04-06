@@ -114,7 +114,7 @@ window.submitWebhook = function() {
 
     console.log("Submitting payload to webhook:", payload);
 
-    fetch('https://294fdf4ded0de6fab36907ba15cb8c.c6.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/72016d4ef24b429a87d82794bc14696c/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=xbTYv30phxU_cmA6bCVhIew6gk2XC8OT7H5C9az-Y_Y', {
+    fetch('https://294fdf4ded0de6fab36907ba15cb8c.c6.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/b2ed72708099407e9f5fb7cd338ac4df/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=mD8wP3n8cUmo-6Cfbcij2-RXs6X2FfJb_QOyZuo2pRs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
