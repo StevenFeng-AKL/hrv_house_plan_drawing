@@ -7,7 +7,7 @@ window.sampleHeatpumps = [];
 
 window.initDrawingArea = function (quoteId, address, guid, s1, s2, d1, d2) {
     console.log("Initializing React Legacy Drawing Mode");
-    
+
     window.currentQuoteId = quoteId || '';
     window.currentAddress = address || '';
     window.currentGuid = guid || '';
@@ -31,7 +31,7 @@ window.initDrawingArea = function (quoteId, address, guid, s1, s2, d1, d2) {
     }
 
     // Give it a short delay to ensure DOM layout has painted properly
-    setTimeout(function() {
+    setTimeout(function () {
         var size = getDrawingAreaSize();
         window.drawingArea = new DrawingArea(size, size);
         window.drawingArea.setHeatpumpTools(window.sampleHeatpumps);
@@ -44,7 +44,7 @@ function getDrawingAreaSize() {
     return drawing_area.width() - (tool_panel.width() + parseInt(tool_panel.css("margin-right") || "0")) - 2;
 }
 
-window.saveLocalSession = function() {
+window.saveLocalSession = function () {
     if (!window.drawingArea) return;
 
     var jsonData = window.drawingArea.getData();
@@ -64,7 +64,7 @@ window.saveLocalSession = function() {
     }, 0);
 };
 
-window.loadLocalSession = function(event) {
+window.loadLocalSession = function (event) {
     if (!window.drawingArea) return;
 
     var file = event.target.files[0];
@@ -85,7 +85,7 @@ window.loadLocalSession = function(event) {
     event.target.value = '';
 };
 
-window.submitWebhook = function() {
+window.submitWebhook = function () {
     if (!window.drawingArea) return;
 
     if (window.location.protocol === 'file:') {
@@ -117,36 +117,36 @@ window.submitWebhook = function() {
 
     console.log("Submitting payload to webhook:", payload);
 
-    fetch('https://294fdf4ded0de6fab36907ba15cb8c.c6.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/b2ed72708099407e9f5fb7cd338ac4df/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=mD8wP3n8cUmo-6Cfbcij2-RXs6X2FfJb_QOyZuo2pRs', {
+    fetch('https://default75616d65c0ac46a2b4df2a6e91309b.8d.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/b42349e1baba49ffa79cf3276d09264c/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=KBHbkf32U0swaTie1Z0z1foC-jkf62iglnlj7S53ueg', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
     })
-    .then(async response => {
-        if (!response.ok) {
-            var text = await response.text();
-            throw new Error(`HTTP error! status: ${response.status}, body: ${text}`);
-        }
-        return response.text().then(text => text ? JSON.parse(text) : {});
-    })
-    .then(data => {
-        console.log('Success:', data);
-        alert('Successfully submitted house plan for ' + (window.currentAddress || 'unknown'));
-    })
-    .catch((error) => {
-        console.error('Error:', error);
-        alert('An error occurred during submission. Check the console for details.');
-    })
-    .finally(() => {
-        if (submitButton) {
-            submitButton.innerText = originalText;
-            submitButton.style.opacity = "1";
-            submitButton.style.pointerEvents = "auto";
-        }
-    });
+        .then(async response => {
+            if (!response.ok) {
+                var text = await response.text();
+                throw new Error(`HTTP error! status: ${response.status}, body: ${text}`);
+            }
+            return response.text().then(text => text ? JSON.parse(text) : {});
+        })
+        .then(data => {
+            console.log('Success:', data);
+            alert('Successfully submitted house plan for ' + (window.currentAddress || 'unknown'));
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            alert('An error occurred during submission. Check the console for details.');
+        })
+        .finally(() => {
+            if (submitButton) {
+                submitButton.innerText = originalText;
+                submitButton.style.opacity = "1";
+                submitButton.style.pointerEvents = "auto";
+            }
+        });
 };
 
-window.exportToImage = function() {
+window.exportToImage = function () {
     if (!window.drawingArea) return;
 
     if (window.location.protocol === 'file:') {
@@ -177,7 +177,7 @@ window.exportToImage = function() {
     }
 };
 
-window.saveToTablet = function() {
+window.saveToTablet = function () {
     if (!window.drawingArea) return;
 
     try {
@@ -191,7 +191,7 @@ window.saveToTablet = function() {
         }
 
         var img = new Image();
-        img.onload = function() {
+        img.onload = function () {
             var canvas = document.createElement("canvas");
             canvas.width = img.width;
             canvas.height = img.height;
@@ -202,41 +202,41 @@ window.saveToTablet = function() {
 
             var overlay = document.createElement("div");
             overlay.style.position = "fixed";
-            overlay.style.top = "0"; overlay.style.left = "0"; 
+            overlay.style.top = "0"; overlay.style.left = "0";
             overlay.style.width = "100%"; overlay.style.height = "100%";
-            overlay.style.backgroundColor = "rgba(0,0,0,0.9)"; 
-            overlay.style.zIndex = "9999"; 
-            overlay.style.display = "flex"; 
-            overlay.style.flexDirection = "column"; 
-            overlay.style.alignItems = "center"; 
+            overlay.style.backgroundColor = "rgba(0,0,0,0.9)";
+            overlay.style.zIndex = "9999";
+            overlay.style.display = "flex";
+            overlay.style.flexDirection = "column";
+            overlay.style.alignItems = "center";
             overlay.style.justifyContent = "center";
-            overlay.style.padding = "20px"; 
+            overlay.style.padding = "20px";
             overlay.style.boxSizing = "border-box";
-            
+
             var msg = document.createElement("h3");
             msg.innerText = "Long-press the image below and select 'Save to Photos'";
-            msg.style.color = "white"; 
-            msg.style.marginBottom = "20px"; 
-            msg.style.fontFamily = "sans-serif"; 
+            msg.style.color = "white";
+            msg.style.marginBottom = "20px";
+            msg.style.fontFamily = "sans-serif";
             msg.style.textAlign = "center";
-            
+
             var imgDisp = document.createElement("img");
             imgDisp.src = canvas.toDataURL('image/jpeg', 0.9);
-            imgDisp.style.maxWidth = "100%"; 
-            imgDisp.style.maxHeight = "70vh"; 
-            imgDisp.style.border = "2px solid white"; 
+            imgDisp.style.maxWidth = "100%";
+            imgDisp.style.maxHeight = "70vh";
+            imgDisp.style.border = "2px solid white";
             imgDisp.style.objectFit = "contain";
-            
+
             var closeBtn = document.createElement("button");
             closeBtn.innerText = "Close";
-            closeBtn.style.padding = "10px 20px"; 
-            closeBtn.style.marginTop = "20px"; 
-            closeBtn.style.fontSize = "16px"; 
+            closeBtn.style.padding = "10px 20px";
+            closeBtn.style.marginTop = "20px";
+            closeBtn.style.fontSize = "16px";
             closeBtn.style.cursor = "pointer";
-            closeBtn.onclick = function() { document.body.removeChild(overlay); };
-            
-            overlay.appendChild(msg); 
-            overlay.appendChild(imgDisp); 
+            closeBtn.onclick = function () { document.body.removeChild(overlay); };
+
+            overlay.appendChild(msg);
+            overlay.appendChild(imgDisp);
             overlay.appendChild(closeBtn);
             document.body.appendChild(overlay);
         };
