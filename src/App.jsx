@@ -4,7 +4,7 @@ import ServiceForm from './components/ServiceForm';
 import './App.css';
 
 function App() {
-  if (window.location.pathname === '/service-form') {
+  if (window.location.hash === '#service-form') {
     return <ServiceForm />;
   }
 
