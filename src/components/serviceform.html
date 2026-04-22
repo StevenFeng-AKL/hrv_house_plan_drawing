@@ -420,10 +420,10 @@
 <!-- ─── Header ────────────────────────────────────────────── -->
 <header class="app-header">
   <div class="brand">
-    <div class="brand-logo"><img src="/HRV2.jpg" alt="HRV Logo" /></div>
+    <div class="brand-logo"><img src="HRV2.jpg" alt="HRV Logo" /></div>
     <div class="brand-text">
       <h1>Ventilation System Service Form</h1>
-      <p>Cristal Air International Ltd T/A HRV Home Solutions</p>
+      <p>HRV NZ Limited</p>
     </div>
   </div>
   <div class="header-meta">
@@ -671,8 +671,11 @@
         <label class="chip" onclick="solo(this,'payChips')"><input type="radio" name="pay" value="Direct Debit">     🏦 Direct Debit</label>
         <label class="chip" onclick="solo(this,'payChips')"><input type="radio" name="pay" value="Internet Banking"> 🌐 Internet Banking</label>
       </div>
+
       <div class="note" style="margin-top:12px;margin-bottom:0;">
-        Bank Account: <strong>12 – 3244 – 0026083 – 00</strong> · Please quote invoice number for internet banking payments.
+        Bank: <strong>BNZ</strong><br>
+        Account Name: <strong>HRV NZ Limited</strong><br>
+        Bank Account: <strong>02 – 0278 – 0425505 – 00</strong> · Please quote invoice number for internet banking payments.
       </div>
     </div>
 
@@ -781,7 +784,7 @@
    ────────────────────────────────────────────────────────── */
 const CONFIG = {
   // Paste your Power Automate HTTP trigger URL here
-  webhookUrl:  'YOUR_POWER_AUTOMATE_WEBHOOK_URL',
+  webhookUrl:  'https://default75616d65c0ac46a2b4df2a6e91309b.8d.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/5fae7f603e2f4a85869c8298d5605f0e/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uJdAcb1B4sP-hECSC18bMzwwXX8wtX-5AJL5sGDpL8c',
   companyName: 'HRV Home Solutions',
   gstRate: 0.15,
 };
@@ -798,7 +801,7 @@ let RECEIPT_DATA = '';
 async function ensureLogo() {
   if (LOGO_DATA) return;
   try {
-    const resp = await fetch('/HRV2.jpg');
+    const resp = await fetch('HRV2.jpg');
     const blob = await resp.blob();
     LOGO_DATA  = await new Promise(res => {
       const fr = new FileReader();
@@ -836,7 +839,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Pre-load logo for PDF via fetch (works reliably on file:// and http://)
   (async () => {
     try {
-      const resp = await fetch('/HRV2.jpg');
+      const resp = await fetch('HRV2.jpg');
       const blob = await resp.blob();
       LOGO_DATA  = await new Promise(res => {
         const fr = new FileReader();
@@ -1217,8 +1220,8 @@ function makePDF(d) {
   f(13,'bold'); rgb(255,255,255);
   doc.text('VENTILATION SYSTEM SERVICE FORM', M, 10);
   f(7,'normal');
-  doc.text('Cristal Air International Ltd T/A HRV Home Solutions', M, 15);
-  doc.text("45 O'Rorke Rd, Penrose, Auckland 1061  ·  PO Box 12722, Penrose, Auckland 1642", M, 19);
+  doc.text('HRV NZ Limited', M, 15);
+  doc.text("36 Victoria Street, Onehunga, Auckland, 1061", M, 19);
   doc.text('0800 478 123  |  hrv.co.nz', M, 23);
 
   // HRV logo
@@ -1451,8 +1454,8 @@ async function downloadPDF() {
   try {
     await ensureLogo();
     const d = collect();
-    const { doc } = makePDF(d);
-    const name = `HRV_Service_${(d.customerName||'Customer').replace(/\s+/g,'_')}_${d.serviceDate||'today'}.pdf`;
+    const { doc, invNo } = makePDF(d);
+    const name = `HRV_Service_${(d.customerName||'Customer').replace(/\s+/g,'_')}_${invNo}.pdf`;
     doc.save(name);
     toast('PDF downloaded ✓');
   } catch(e) {
@@ -1478,7 +1481,7 @@ async function sendEmails() {
     hideOverlay(); toast('Error generating PDF'); return;
   }
 
-  const fileName = `HRV_Service_${(d.customerName||'Customer').replace(/\s+/g,'_')}_${d.serviceDate||'today'}.pdf`;
+  const fileName = `HRV_Service_${(d.customerName||'Customer').replace(/\s+/g,'_')}_${invNo}.pdf`;
 
   // ── Fallback: webhook not configured ──────────────────────
   if (CONFIG.webhookUrl === 'YOUR_POWER_AUTOMATE_WEBHOOK_URL') {
