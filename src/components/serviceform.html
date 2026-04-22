@@ -1,0 +1,1554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HRV — Ventilation System Service Form</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    /* ─── Variables ─────────────────────────────────────────── */
+    :root {
+      --red:    #087ebc;
+      --red-dk: #06699e;
+      --red-lt: #e0f2fb;
+      --dark:   #1C1C1E;
+      --mid:    #6C6C70;
+      --bg:     #F2F2F7;
+      --card:   #FFFFFF;
+      --border: #E5E5EA;
+      --inbg:   #F8F8F8;
+      --green:  #34C759;
+      --orange: #FF9500;
+      --radius: 12px;
+      --shadow: 0 1px 4px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.06);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--dark);
+      min-height: 100vh;
+      padding-bottom: 72px;
+    }
+
+    /* ─── Header ────────────────────────────────────────────── */
+    .app-header {
+      background: var(--red);
+      color: #fff;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      box-shadow: 0 2px 10px rgba(0,0,0,.25);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-logo {
+      width: 52px; height: 52px;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      padding: 2px;
+    }
+    .brand-logo img { width: 100%; height: 100%; object-fit: contain; }
+    .brand-text h1 { font-size: 17px; font-weight: 700; line-height: 1.25; }
+    .brand-text p  { font-size: 11px; opacity: .82; }
+    .header-meta   { text-align: right; font-size: 11px; line-height: 1.6; opacity: .92; }
+    .header-meta strong { font-size: 12px; }
+
+    /* ─── Progress bar ──────────────────────────────────────── */
+    .progress-wrap {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .progress-wrap::-webkit-scrollbar { display: none; }
+    .progress-steps { display: flex; min-width: max-content; }
+    .ps {
+      display: flex; align-items: center; gap: 7px;
+      padding: 12px 18px;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all .2s;
+      user-select: none;
+    }
+    .ps:hover { background: var(--bg); }
+    .ps.active { border-bottom-color: var(--red); color: var(--red); }
+    .ps.done   { color: var(--green); }
+    .ps-num {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700;
+      flex-shrink: 0;
+    }
+    .ps.active .ps-num { background: var(--red);   color: #fff; }
+    .ps.done   .ps-num { background: var(--green); color: #fff; }
+    .ps-label  { font-size: 13px; font-weight: 500; }
+
+    /* ─── Layout ────────────────────────────────────────────── */
+    .main { max-width: 780px; margin: 0 auto; padding: 22px 16px; }
+    .step-panel { display: none; }
+    .step-panel.active { display: block; }
+
+    /* ─── Card ──────────────────────────────────────────────── */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+    .card-title {
+      font-size: 14px; font-weight: 700;
+      display: flex; align-items: center; gap: 8px;
+      padding-bottom: 12px; margin-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-title .ci {
+      width: 28px; height: 28px; border-radius: 6px;
+      background: var(--red-lt);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; flex-shrink: 0;
+    }
+
+    /* ─── Form elements ─────────────────────────────────────── */
+    .row   { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .row.x3 { grid-template-columns: 1fr 1fr 1fr; }
+    .row.x1 { grid-template-columns: 1fr; }
+    @media (max-width: 500px) {
+      .row, .row.x3 { grid-template-columns: 1fr; }
+    }
+    .fg { display: flex; flex-direction: column; gap: 5px; }
+    .fg label {
+      font-size: 11px; font-weight: 700;
+      color: var(--mid); text-transform: uppercase; letter-spacing: .5px;
+    }
+    .fg input, .fg select, .fg textarea {
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 15px;
+      background: var(--inbg);
+      color: var(--dark);
+      font-family: inherit;
+      width: 100%;
+      transition: border-color .18s, background .18s;
+    }
+    .fg input:focus, .fg select:focus, .fg textarea:focus {
+      outline: none; border-color: var(--red); background: #fff;
+    }
+    .fg textarea { resize: vertical; min-height: 80px; }
+
+    /* ─── Chip selectors ────────────────────────────────────── */
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      display: flex; align-items: center; gap: 5px;
+      padding: 8px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      cursor: pointer; font-size: 14px;
+      background: var(--inbg);
+      transition: all .17s;
+      user-select: none;
+    }
+    .chip:hover { border-color: var(--red); }
+    .chip input { display: none; }
+    .chip.sel { background: var(--red-lt); border-color: var(--red); color: var(--red); font-weight: 600; }
+
+    /* ─── Yes / No toggle ───────────────────────────────────── */
+    .yn { display: flex; border-radius: 8px; overflow: hidden; border: 1.5px solid var(--border); width: fit-content; }
+    .yn-btn {
+      padding: 8px 20px; border: none; cursor: pointer;
+      font-size: 14px; font-weight: 600;
+      background: var(--inbg); color: var(--mid);
+      transition: all .15s; font-family: inherit;
+    }
+    .yn-btn:first-child { border-right: 1px solid var(--border); }
+    .yn-btn.y.on { background: var(--green); color: #fff; }
+    .yn-btn.n.on { background: #FF3B30; color: #fff; }
+
+    /* ─── Section sub-label ─────────────────────────────────── */
+    .sub-hd {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .7px; color: var(--red); margin: 18px 0 10px;
+    }
+
+    /* ─── Check list ────────────────────────────────────────── */
+    .cl-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 11px 0; border-bottom: 1px solid var(--border); gap: 12px;
+    }
+    .cl-item:last-child { border-bottom: none; }
+    .cl-label { font-size: 14px; flex: 1; }
+    .cl-star  { color: var(--mid); font-size: 11px; margin-left: 3px; }
+
+    /* ─── Airflow table ─────────────────────────────────────── */
+    .af-wrap { overflow-x: auto; }
+    table.af {
+      width: 100%; border-collapse: collapse; min-width: 380px;
+    }
+    table.af th {
+      background: var(--inbg); padding: 9px 10px;
+      font-size: 11px; font-weight: 700; color: var(--mid);
+      text-transform: uppercase; letter-spacing: .5px;
+      border-bottom: 2px solid var(--border); text-align: left;
+    }
+    table.af td { padding: 6px 8px; border-bottom: 1px solid var(--border); }
+    table.af td:first-child { font-weight: 500; font-size: 14px; }
+    table.af input {
+      width: 100%; padding: 6px 8px;
+      border: 1.5px solid var(--border); border-radius: 6px;
+      font-size: 14px; text-align: center; background: var(--inbg);
+      font-family: inherit;
+    }
+    table.af input:focus { outline: none; border-color: var(--red); background: #fff; }
+    .af-del {
+      background: none; border: none; cursor: pointer;
+      color: #FF3B30; font-size: 18px; line-height: 1; padding: 0 4px;
+    }
+
+    /* ─── Temp cards ────────────────────────────────────────── */
+    .temp-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+    @media (max-width: 400px) { .temp-grid { grid-template-columns: 1fr; } }
+    .temp-card { background: var(--inbg); border-radius: 10px; padding: 14px; text-align: center; }
+    .temp-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--mid); margin-bottom: 10px; }
+    .temp-lbl  { font-size: 11px; color: var(--mid); margin-bottom: 3px; }
+    .temp-in {
+      padding: 8px 4px; border: 1.5px solid var(--border); border-radius: 6px;
+      font-size: 16px; font-weight: 600; text-align: center; width: 100%;
+      background: #fff; font-family: inherit; margin-bottom: 8px;
+    }
+    .temp-in:focus { outline: none; border-color: var(--red); }
+
+    /* ─── Result options ────────────────────────────────────── */
+    .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 420px) { .results-grid { grid-template-columns: 1fr; } }
+    .res-opt {
+      border: 2px solid var(--border); border-radius: 10px; padding: 14px 16px;
+      cursor: pointer; transition: all .2s;
+      display: flex; align-items: center; gap: 10px;
+      background: var(--inbg);
+    }
+    .res-opt:hover { border-color: var(--red); }
+    .res-opt.sel   { border-color: var(--red); background: var(--red-lt); }
+    .res-opt input { display: none; }
+    .res-icon  { font-size: 20px; }
+    .res-label { font-size: 14px; font-weight: 600; }
+
+    /* ─── Items sold table ──────────────────────────────────── */
+    .items-wrap { overflow-x: auto; }
+    table.items { width: 100%; border-collapse: collapse; min-width: 460px; }
+    table.items thead tr { background: var(--red); }
+    table.items th {
+      padding: 9px 10px; color: #fff;
+      font-size: 11px; font-weight: 700; text-transform: uppercase; text-align: left;
+    }
+    table.items td { padding: 5px 7px; border-bottom: 1px solid var(--border); }
+    table.items input {
+      width: 100%; padding: 7px 8px;
+      border: 1.5px solid transparent; border-radius: 6px;
+      font-size: 14px; background: transparent; font-family: inherit;
+      transition: all .18s;
+    }
+    table.items input:focus { outline: none; border-color: var(--red); background: #fff; }
+    table.items .del-btn {
+      background: none; border: none; cursor: pointer;
+      color: #FF3B30; font-size: 18px; line-height: 1; padding: 0 4px;
+    }
+    .totals { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; margin-top: 14px; }
+    .tot-row { display: flex; justify-content: space-between; min-width: 220px; gap: 20px; }
+    .tot-label { font-size: 14px; color: var(--mid); }
+    .tot-val   { font-size: 14px; font-weight: 600; }
+    .tot-grand { font-size: 18px; font-weight: 700; border-top: 2px solid var(--dark); padding-top: 6px; }
+
+    /* ─── Add-row button ────────────────────────────────────── */
+    .add-row-btn {
+      width: 100%; margin-top: 10px; padding: 10px;
+      background: transparent; border: 2px dashed var(--border);
+      border-radius: 8px; cursor: pointer; font-size: 14px;
+      color: var(--mid); font-family: inherit; transition: all .18s;
+    }
+    .add-row-btn:hover { border-color: var(--red); color: var(--red); }
+
+    /* ─── Signature pad ─────────────────────────────────────── */
+    .sig-wrap {
+      position: relative; border: 2px solid var(--border);
+      border-radius: 8px; overflow: hidden; background: #FAFAFA;
+    }
+    .sig-canvas { display: block; width: 100%; height: 150px; cursor: crosshair; touch-action: none; }
+    .sig-clear {
+      position: absolute; top: 8px; right: 8px;
+      padding: 4px 10px; background: rgba(255,255,255,.9);
+      border: 1px solid var(--border); border-radius: 6px;
+      cursor: pointer; font-size: 12px; color: var(--mid);
+      font-family: inherit;
+    }
+    .sig-ph {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      font-size: 13px; color: var(--mid); pointer-events: none;
+    }
+
+    /* ─── Info note ─────────────────────────────────────────── */
+    .note {
+      background: #EEF4FF; border-left: 3px solid #2563EB;
+      border-radius: 0 8px 8px 0; padding: 10px 14px;
+      font-size: 13px; color: #1E40AF; line-height: 1.55; margin-bottom: 16px;
+    }
+    .warn-note {
+      background: #FFFBEB; border-left: 3px solid var(--orange);
+      border-radius: 0 8px 8px 0; padding: 10px 14px;
+      font-size: 13px; color: #92400E; line-height: 1.55; margin-bottom: 16px;
+    }
+
+    /* ─── Legal box ─────────────────────────────────────────── */
+    .legal {
+      font-size: 12px; color: var(--mid); line-height: 1.65;
+      padding: 14px; background: var(--inbg); border-radius: 8px;
+    }
+    .legal strong { color: var(--dark); }
+
+    /* ─── Marketing consent ─────────────────────────────────── */
+    .consent-row {
+      display: flex; gap: 10px; align-items: flex-start;
+      background: var(--inbg); border-radius: 8px; padding: 12px;
+    }
+    .consent-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--red); margin-top: 2px; flex-shrink: 0; }
+    .consent-row span { font-size: 13px; color: var(--mid); line-height: 1.5; }
+
+    /* ─── Send buttons ──────────────────────────────────────── */
+    .send-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+
+    /* ─── Bottom nav ────────────────────────────────────────── */
+    .nav-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: #fff; border-top: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex; gap: 10px;
+      z-index: 150;
+    }
+    .btn {
+      padding: 12px 24px; border-radius: 10px;
+      font-size: 15px; font-weight: 600; cursor: pointer;
+      border: none; transition: all .18s; font-family: inherit;
+    }
+    .btn-primary   { background: var(--red);   color: #fff; flex: 1; }
+    .btn-primary:hover   { background: var(--red-dk); }
+    .btn-secondary { background: var(--inbg);  color: var(--dark); border: 1.5px solid var(--border); }
+    .btn-secondary:hover { background: var(--border); }
+    .btn-outline   { background: transparent; border: 2px solid var(--red); color: var(--red); }
+    .btn-outline:hover { background: var(--red-lt); }
+    .btn-green { background: var(--green); color: #fff; }
+    .btn-green:hover { background: #28A745; }
+
+    /* ─── Toast ─────────────────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 76px; left: 50%;
+      transform: translateX(-50%) translateY(14px);
+      background: #1C1C1E; color: #fff;
+      padding: 11px 22px; border-radius: 20px;
+      font-size: 14px; opacity: 0;
+      transition: all .28s; pointer-events: none; z-index: 999;
+      white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ─── Loading overlay ───────────────────────────────────── */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.48);
+      display: none; align-items: center; justify-content: center; z-index: 9999;
+    }
+    .overlay.on { display: flex; }
+    .overlay-card { background: #fff; border-radius: 16px; padding: 30px; text-align: center; min-width: 180px; }
+    .spinner {
+      width: 38px; height: 38px; border: 4px solid var(--border);
+      border-top-color: var(--red); border-radius: 50%;
+      animation: spin .75s linear infinite; margin: 0 auto 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .overlay-card p { font-size: 14px; color: var(--mid); }
+
+    /* ─── Receipt upload ────────────────────────────────────── */
+    .receipt-zone {
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      background: var(--inbg);
+      cursor: pointer;
+      transition: all .2s;
+      overflow: hidden;
+      min-height: 120px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .receipt-zone:hover { border-color: var(--red); background: var(--red-lt); }
+    .receipt-zone.filled { border-style: solid; border-color: var(--red); padding: 0; min-height: unset; }
+    .receipt-ph { text-align: center; padding: 24px 16px; color: var(--mid); }
+    .receipt-ph .rp-icon { font-size: 36px; display: block; margin-bottom: 8px; }
+    .receipt-ph p { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .receipt-ph small { font-size: 12px; }
+    .receipt-preview { width: 100%; display: block; border-radius: 8px; }
+    .receipt-actions { display: flex; gap: 8px; margin-top: 10px; }
+
+    /* ─── Config notice ─────────────────────────────────────── */
+    .cfg-banner {
+      background: #FFF8E7; border: 1px solid #F59E0B;
+      border-radius: 8px; padding: 10px 14px;
+      font-size: 12px; color: #78350F; line-height: 1.5; margin-bottom: 14px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div class="overlay" id="overlay">
+  <div class="overlay-card">
+    <div class="spinner"></div>
+    <p id="overlayMsg">Please wait…</p>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ─── Header ────────────────────────────────────────────── -->
+<header class="app-header">
+  <div class="brand">
+    <div class="brand-logo"><img src="/HRV2.jpg" alt="HRV Logo" /></div>
+    <div class="brand-text">
+      <h1>Ventilation System Service Form</h1>
+      <p>Cristal Air International Ltd T/A HRV Home Solutions</p>
+    </div>
+  </div>
+  <div class="header-meta">
+    <div>0800 478 123</div>
+    <div>hrv.co.nz</div>
+    <strong>Tax Invoice</strong>
+    <div>GST: 090-464-779</div>
+  </div>
+</header>
+
+<!-- ─── Progress ──────────────────────────────────────────── -->
+<div class="progress-wrap">
+  <div class="progress-steps" id="progressSteps">
+    <div class="ps active" data-step="1" onclick="goTo(1)"><div class="ps-num">1</div><span class="ps-label">Customer</span></div>
+    <div class="ps"        data-step="2" onclick="goTo(2)"><div class="ps-num">2</div><span class="ps-label">System</span></div>
+    <div class="ps"        data-step="3" onclick="goTo(3)"><div class="ps-num">3</div><span class="ps-label">Checklist</span></div>
+    <div class="ps"        data-step="4" onclick="goTo(4)"><div class="ps-num">4</div><span class="ps-label">Airflow</span></div>
+    <div class="ps"        data-step="5" onclick="goTo(5)"><div class="ps-num">5</div><span class="ps-label">Results &amp; Sales</span></div>
+    <div class="ps"        data-step="6" onclick="goTo(6)"><div class="ps-num">6</div><span class="ps-label">Sign &amp; Send</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN
+═══════════════════════════════════════════════════════════ -->
+<div class="main">
+
+  <!-- ── STEP 1 · Customer & Job ─────────────────────────── -->
+  <div class="step-panel active" id="panel-1">
+
+    <div class="card">
+      <div class="card-title"><div class="ci">👤</div> Customer Information</div>
+      <div class="row x1"><div class="fg">
+        <label>Customer Name *</label>
+        <input type="text" id="cName" placeholder="Full name" />
+      </div></div>
+      <div class="row x1"><div class="fg">
+        <label>Address *</label>
+        <input type="text" id="cAddr" placeholder="Street address, Suburb, City" />
+      </div></div>
+      <div class="row">
+        <div class="fg"><label>Phone Number</label><input type="tel" id="cPhone" placeholder="09 XXX XXXX" /></div>
+        <div class="fg"><label>Mobile Number</label><input type="tel" id="cMobile" placeholder="021 XXX XXXX" /></div>
+      </div>
+      <div class="row x1"><div class="fg">
+        <label>Email Address *</label>
+        <input type="email" id="cEmail" placeholder="customer@email.com" oninput="document.getElementById('confirmEmail').value=this.value" />
+      </div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="ci">📋</div> Job Details</div>
+      <div class="row">
+        <div class="fg"><label>Service Date *</label><input type="date" id="sDate" /></div>
+        <div class="fg"><label>Service Time</label><input type="time" id="sTime" /></div>
+      </div>
+      <div class="row x1"><div class="fg">
+        <label>Service Person *</label>
+        <input type="text" id="sPerson" placeholder="Technician name" />
+      </div></div>
+
+      <div class="sub-hd">Property Occupancy</div>
+      <div class="row">
+        <div class="fg">
+          <label>Owner Present?</label>
+          <div class="chips" id="ownerChips">
+            <label class="chip" onclick="solo(this,'ownerChips')"><input type="radio" name="owner" value="Yes"> Yes</label>
+            <label class="chip" onclick="solo(this,'ownerChips')"><input type="radio" name="owner" value="No">  No</label>
+          </div>
+        </div>
+        <div class="fg">
+          <label>Tenant Present?</label>
+          <div class="chips" id="tenantChips">
+            <label class="chip" onclick="solo(this,'tenantChips')"><input type="radio" name="tenant" value="Yes"> Yes</label>
+            <label class="chip" onclick="solo(this,'tenantChips')"><input type="radio" name="tenant" value="No">  No</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="fg">
+          <label>Insulation</label>
+          <div class="yn">
+            <button class="yn-btn y" onclick="yn(this,'insulation','Yes')">Yes</button>
+            <button class="yn-btn n" onclick="yn(this,'insulation','No')">No</button>
+          </div>
+        </div>
+        <div class="fg">
+          <label>Soffit</label>
+          <div class="yn">
+            <button class="yn-btn y" onclick="yn(this,'soffit','Yes')">Yes</button>
+            <button class="yn-btn n" onclick="yn(this,'soffit','No')">No</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /step 1 -->
+
+  <!-- ── STEP 2 · System Info ────────────────────────────── -->
+  <div class="step-panel" id="panel-2">
+
+    <div class="card">
+      <div class="card-title"><div class="ci">🔥</div> Primary Heating</div>
+      <div class="chips" id="heatingChips">
+        <label class="chip" onclick="solo(this,'heatingChips')"><input type="radio" name="heat" value="Electric"> ⚡ Electric</label>
+        <label class="chip" onclick="solo(this,'heatingChips')"><input type="radio" name="heat" value="Wood">    🪵 Wood</label>
+        <label class="chip" onclick="solo(this,'heatingChips')"><input type="radio" name="heat" value="Gas">     🔥 Gas</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="ci">⚙️</div> System Model</div>
+      <div class="chips" id="modelChips">
+        <label class="chip" onclick="solo(this,'modelChips');showOther(this)"><input type="radio" name="model" value="Janus (1 filter)">    Janus — 1 filter</label>
+        <label class="chip" onclick="solo(this,'modelChips');showOther(this)"><input type="radio" name="model" value="Arizona (2 filters)"> Arizona — 2 filters</label>
+        <label class="chip" onclick="solo(this,'modelChips');showOther(this)"><input type="radio" name="model" value="Phoenix (3 filters)"> Phoenix — 3 filters</label>
+        <label class="chip" onclick="solo(this,'modelChips');showOther(this)"><input type="radio" name="model" value="Rango (4 filters)">   Rango — 4 filters</label>
+        <label class="chip" onclick="solo(this,'modelChips');showOther(this)"><input type="radio" name="model" value="HRV Lite">            HRV Lite</label>
+        <label class="chip" onclick="solo(this,'modelChips');showOther(this)"><input type="radio" name="model" value="3 Pin Plug">          3 Pin Plug</label>
+        <label class="chip" onclick="solo(this,'modelChips');showOther(this)"><input type="radio" name="model" value="Hard Wired">          Hard Wired</label>
+        <label class="chip" onclick="solo(this,'modelChips');showOther(this)" data-other="1"><input type="radio" name="model" value="Other"> Other…</label>
+      </div>
+      <div class="fg" id="otherModelFg" style="display:none;margin-top:12px;">
+        <label>Other (specify)</label>
+        <input type="text" id="otherModel" placeholder="Describe system model" />
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="ci">🔧</div> Accessories Currently Fitted</div>
+      <div class="chips" id="accessChips">
+        <label class="chip multi" onclick="multi(event,this)"><input type="checkbox" name="acc" value="ATU">           ATU</label>
+        <label class="chip multi" onclick="multi(event,this)"><input type="checkbox" name="acc" value="Heat Transfer"> Heat Transfer</label>
+        <label class="chip multi" onclick="multi(event,this)"><input type="checkbox" name="acc" value="Summer Kit">    Summer Kit</label>
+        <label class="chip multi" onclick="multi(event,this)"><input type="checkbox" name="acc" value="HRV+">          HRV+</label>
+        <label class="chip multi" onclick="multi(event,this)"><input type="checkbox" name="acc" value="Heat Pump">     Heat Pump</label>
+        <label class="chip multi" onclick="multi(event,this)"><input type="checkbox" name="acc" value="Nobo/LHZ">      Nobo / LHZ</label>
+        <label class="chip multi" onclick="multi(event,this)"><input type="checkbox" name="acc" value="SETA">          SETA</label>
+        <label class="chip multi" onclick="multi(event,this)"><input type="checkbox" name="acc" value="Vortex">        Vortex</label>
+        <label class="chip multi" onclick="multi(event,this)"><input type="checkbox" name="acc" value="HRV Water">     HRV Water</label>
+        <label class="chip multi" onclick="multi(event,this)"><input type="checkbox" name="acc" value="Smoke Alarm">   Smoke Alarm</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="ci">📝</div> Notes</div>
+      <div class="fg"><textarea id="notes" placeholder="Additional notes about the system or property…" rows="4"></textarea></div>
+    </div>
+
+  </div><!-- /step 2 -->
+
+  <!-- ── STEP 3 · Service Checklist ──────────────────────── -->
+  <div class="step-panel" id="panel-3">
+    <div class="note">Mark each task <strong>Yes</strong> (done) or <strong>No</strong> (not done / not applicable).</div>
+    <div class="card">
+      <div class="card-title"><div class="ci">✅</div> System Service Check</div>
+      <div id="checklistWrap"><!-- built by JS --></div>
+    </div>
+  </div><!-- /step 3 -->
+
+  <!-- ── STEP 4 · Airflow & Temperatures ─────────────────── -->
+  <div class="step-panel" id="panel-4">
+
+    <div class="card">
+      <div class="card-title"><div class="ci">💨</div> Airflow Readings</div>
+      <div class="note" style="margin-bottom:16px;">
+        ℹ️ <strong>Airflow set on Burnt Toast Mode</strong>
+      </div>
+      <div class="af-wrap">
+        <table class="af">
+          <thead><tr><th style="width:38%">Location</th><th>Before Service</th><th>After Service</th><th style="width:36px"></th></tr></thead>
+          <tbody id="afBody"><!-- built by JS --></tbody>
+        </table>
+      </div>
+      <button class="add-row-btn" onclick="addAfRow()">+ Add Room</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="ci">🌡️</div> Temperature Readings</div>
+      <div class="temp-grid">
+        <div class="temp-card">
+          <div class="temp-title">🏠 House Temp</div>
+          <input class="temp-in" id="houseTemp" type="text" placeholder="°C" />
+        </div>
+        <div class="temp-card">
+          <div class="temp-title">🏗️ Roof Temp</div>
+          <input class="temp-in" id="roofTemp" type="text" placeholder="°C" />
+        </div>
+        <div class="temp-card">
+          <div class="temp-title">🎯 Set Temp</div>
+          <input class="temp-in" id="setTemp" type="text" placeholder="°C" />
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /step 4 -->
+
+  <!-- ── STEP 5 · Results, Sales & Payment ───────────────── -->
+  <div class="step-panel" id="panel-5">
+
+    <div class="card">
+      <div class="card-title"><div class="ci">📊</div> Service Result</div>
+      <div class="results-grid">
+        <label class="res-opt" onclick="pickResult(this)"><input type="radio" name="result" value="Successfully Completed"><span class="res-icon">✅</span><span class="res-label">Successfully Completed</span></label>
+        <label class="res-opt" onclick="pickResult(this)"><input type="radio" name="result" value="Incomplete Service">    <span class="res-icon">⚠️</span><span class="res-label">Incomplete Service</span></label>
+        <label class="res-opt" onclick="pickResult(this)"><input type="radio" name="result" value="Handyman Required">     <span class="res-icon">🔨</span><span class="res-label">Handyman Required</span></label>
+        <label class="res-opt" onclick="pickResult(this)"><input type="radio" name="result" value="Follow-up Required">    <span class="res-icon">📅</span><span class="res-label">Follow-up Required</span></label>
+      </div>
+      <div class="fg" style="margin-top:14px;">
+        <label>Comments on Service</label>
+        <textarea id="resultComments" placeholder="Describe the service outcome…" rows="3"></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="ci">📈</div> System Upgrade Recommendation</div>
+      <div class="fg">
+        <textarea id="upgradeNotes" placeholder="Reasons for upgrade recommendation (leave blank if none)…" rows="3"></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="ci">🛒</div> Items Sold</div>
+      <div class="items-wrap">
+        <table class="items">
+          <thead><tr><th style="width:44%">Description</th><th style="width:11%">Qty</th><th style="width:18%">Unit Price</th><th style="width:18%">Total</th><th style="width:9%"></th></tr></thead>
+          <tbody id="itemsBody"><!-- built by JS --></tbody>
+        </table>
+      </div>
+      <button class="add-row-btn" onclick="addItemRow()">+ Add Item</button>
+      <div class="totals">
+        <div class="tot-row"><span class="tot-label">Sub-total</span><span class="tot-val" id="subtotal">$0.00</span></div>
+        <div class="tot-row"><span class="tot-label">GST (15%)</span><span class="tot-val" id="gst">$0.00</span></div>
+        <div class="tot-row tot-grand"><span>TOTAL</span><span id="total">$0.00</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="ci">💳</div> Method of Payment</div>
+      <div class="chips" id="payChips">
+        <label class="chip" onclick="solo(this,'payChips')"><input type="radio" name="pay" value="Visa">             💳 Visa</label>
+        <label class="chip" onclick="solo(this,'payChips')"><input type="radio" name="pay" value="Mastercard">       💳 Mastercard</label>
+        <label class="chip" onclick="solo(this,'payChips')"><input type="radio" name="pay" value="Eftpos">           🏧 Eftpos</label>
+        <label class="chip" onclick="solo(this,'payChips')"><input type="radio" name="pay" value="Direct Debit">     🏦 Direct Debit</label>
+        <label class="chip" onclick="solo(this,'payChips')"><input type="radio" name="pay" value="Internet Banking"> 🌐 Internet Banking</label>
+      </div>
+      <div class="note" style="margin-top:12px;margin-bottom:0;">
+        Bank Account: <strong>12 – 3244 – 0026083 – 00</strong> · Please quote invoice number for internet banking payments.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="ci">📷</div> Payment Receipt</div>
+      <div class="receipt-zone" id="receiptZone" onclick="document.getElementById('receiptInput').click()">
+        <div class="receipt-ph" id="receiptPh">
+          <span class="rp-icon">🧾</span>
+          <p>Tap to photograph or upload receipt</p>
+          <small>Photo will be compressed automatically</small>
+        </div>
+        <img id="receiptPreview" class="receipt-preview" style="display:none;" alt="Payment receipt" />
+      </div>
+      <input type="file" id="receiptInput" accept="image/*" style="display:none" onchange="handleReceipt(this)" />
+      <div class="receipt-actions">
+        <button class="btn btn-outline" style="flex:1" onclick="document.getElementById('receiptInput').click()">📷 &nbsp;Take / Upload Photo</button>
+        <button class="btn btn-secondary" id="receiptClearBtn" style="display:none" onclick="clearReceipt()">✕ &nbsp;Remove</button>
+      </div>
+    </div>
+
+  </div><!-- /step 5 -->
+
+  <!-- ── STEP 6 · Sign & Send ────────────────────────────── -->
+  <div class="step-panel" id="panel-6">
+
+    <div class="note">
+      Owner acknowledges that a final walkthrough has been done and a filter change service check has been completed,
+      and the HRV System is working to their satisfaction.
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="ci">✍️</div> Owner / Occupier's Signature</div>
+      <div class="sig-wrap">
+        <canvas class="sig-canvas" id="ownerCanvas"></canvas>
+        <button class="sig-clear" onclick="clearSig('owner')">Clear</button>
+        <div class="sig-ph" id="ownerPh">Sign here</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="ci">✍️</div> Authorised HRV Technician Signature</div>
+      <div class="sig-wrap">
+        <canvas class="sig-canvas" id="authCanvas"></canvas>
+        <button class="sig-clear" onclick="clearSig('auth')">Clear</button>
+        <div class="sig-ph" id="authPh">Sign here</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="ci">📣</div> Marketing Preference</div>
+      <div class="consent-row">
+        <input type="checkbox" id="mktConsent" />
+        <span>I would like HRV to contact me about other products and services I might be interested in.</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="ci">📤</div> Send Service Report</div>
+
+      <!-- Show if EmailJS not configured -->
+      <div class="cfg-banner" id="cfgBanner">
+        <strong>⚙️ Webhook not yet configured.</strong> Open <code>index.html</code>, find the <code>CONFIG</code> block
+        at the top of the &lt;script&gt;, and replace <code>YOUR_POWER_AUTOMATE_WEBHOOK_URL</code> with your
+        Power Automate HTTP trigger URL. Until then, use <em>Download PDF</em> to save manually.
+      </div>
+
+      <div class="fg" style="margin-bottom:12px;">
+        <label>Customer Email (confirm)</label>
+        <input type="email" id="confirmEmail" placeholder="customer@email.com" />
+      </div>
+      <div class="send-actions">
+        <button class="btn btn-outline" onclick="downloadPDF()">⬇&nbsp; Download PDF</button>
+        <button class="btn btn-green"   onclick="sendEmails()">📧&nbsp; Email PDF to Customer &amp; HRV</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="legal">
+        <strong>Warranty:</strong> The standard manufacturer warranty shall apply.
+        IMPORTANT — Authentic parts supplied by HRV are required in your HRV system to ensure your system remains warranted.<br><br>
+        <strong>Right of Cancellation:</strong> If goods were purchased during an "uninvited direct sale" within the meaning of the
+        Fair Trading Act 1986, you have the right to cancel this Agreement within 5 working days.<br><br>
+        I understand that to ensure optimum performance I should service my system and change the filter every 24 months.
+        (F7 filters must be changed every 12 months for HRV Lite systems.)<br><br>
+        By signing you acknowledge and agree to all Terms &amp; Conditions of Supply.<br>
+        <em>*F7 filter used for HRV Lite systems</em>
+      </div>
+    </div>
+
+  </div><!-- /step 6 -->
+
+</div><!-- /main -->
+
+<!-- ─── Bottom nav ─────────────────────────────────────────── -->
+<div class="nav-bar">
+  <button class="btn btn-secondary" id="btnBack" style="display:none" onclick="prevStep()">← Back</button>
+  <button class="btn btn-primary"   id="btnNext" onclick="nextStep()">Next →</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════════════════ -->
+<script>
+/* ──────────────────────────────────────────────────────────
+   CONFIG  — edit before deployment
+   ────────────────────────────────────────────────────────── */
+const CONFIG = {
+  // Paste your Power Automate HTTP trigger URL here
+  webhookUrl:  'YOUR_POWER_AUTOMATE_WEBHOOK_URL',
+  companyName: 'HRV Home Solutions',
+  gstRate: 0.15,
+};
+
+/* ──────────────────────────────────────────────────────────
+   STATE
+   ────────────────────────────────────────────────────────── */
+let step = 1;
+const TOTAL = 6;
+let LOGO_DATA    = '';
+let RECEIPT_DATA = '';
+
+// Guarantee logo is loaded before PDF generation
+async function ensureLogo() {
+  if (LOGO_DATA) return;
+  try {
+    const resp = await fetch('/HRV2.jpg');
+    const blob = await resp.blob();
+    LOGO_DATA  = await new Promise(res => {
+      const fr = new FileReader();
+      fr.onload = e => res(e.target.result);
+      fr.readAsDataURL(blob);
+    });
+  } catch(e) { console.warn('Logo unavailable:', e); }
+}
+const S = {                  // simple key → value store for yn/radio state
+  insulation: '', soffit: '',
+};
+
+/* ──────────────────────────────────────────────────────────
+   CHECKLIST ITEMS
+   ────────────────────────────────────────────────────────── */
+const CHECKS = [
+  { label: 'Check all diffusers',                          star: false },
+  { label: 'Check air flow readings from all outlets',     star: false },
+  { label: 'Clean all dust rings',                         star: false },
+  { label: 'Check all ducting',                            star: false },
+  { label: 'Check all fan strapping',                      star: false },
+  { label: 'Check fan running correctly',                  star: false },
+  { label: 'Change all filters with HRV F8 filters',       star: true  },
+  { label: 'Check all data and power cables',              star: false },
+  { label: 'Reset filter light',                           star: false },
+  { label: 'Check keypad and settings',                    star: false },
+  { label: 'Clean all marks from servicing process',       star: false },
+  { label: 'All rubbish &amp; tools removed from property',star: false },
+];
+
+/* ──────────────────────────────────────────────────────────
+   INIT
+   ────────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  // Pre-load logo for PDF via fetch (works reliably on file:// and http://)
+  (async () => {
+    try {
+      const resp = await fetch('/HRV2.jpg');
+      const blob = await resp.blob();
+      LOGO_DATA  = await new Promise(res => {
+        const fr = new FileReader();
+        fr.onload = e => res(e.target.result);
+        fr.readAsDataURL(blob);
+      });
+    } catch (e) { console.warn('HRV logo not loaded for PDF:', e); }
+  })();
+
+  document.getElementById('sDate').value = new Date().toISOString().split('T')[0];
+
+  // Pre-fill fields from URL query parameters
+  // e.g. ?cus=Jane+Smith&adr=12+Main+St&mob=021000000&pho=093000000&eml=jane@email.com&svc=Mike
+  const params = new URLSearchParams(window.location.search);
+  const urlMap = {
+    cus: 'cName',
+    adr: 'cAddr',
+    pho: 'cPhone',
+    mob: 'cMobile',
+    eml: 'cEmail',
+    svc: 'sPerson',
+  };
+  Object.entries(urlMap).forEach(([param, id]) => {
+    const val = params.get(param);
+    if (val) {
+      document.getElementById(id).value = val;
+      if (id === 'cEmail') document.getElementById('confirmEmail').value = val;
+    }
+  });
+
+  buildChecklist();
+  buildAirflow();
+  addItemRow();
+  addItemRow();
+
+  // EmailJS setup
+  const configured = CONFIG.webhookUrl !== 'YOUR_POWER_AUTOMATE_WEBHOOK_URL';
+  document.getElementById('cfgBanner').style.display = configured ? 'none' : 'block';
+
+  updateNav();
+});
+
+/* ──────────────────────────────────────────────────────────
+   BUILD CHECKLIST
+   ────────────────────────────────────────────────────────── */
+function buildChecklist() {
+  const wrap = document.getElementById('checklistWrap');
+  CHECKS.forEach((c, i) => {
+    const div = document.createElement('div');
+    div.className = 'cl-item';
+    div.innerHTML = `
+      <span class="cl-label">${c.label}${c.star ? '<span class="cl-star">*</span>' : ''}</span>
+      <div class="yn">
+        <button class="yn-btn y" onclick="ynCheck(this,'chk${i}','Yes')">Yes</button>
+        <button class="yn-btn n" onclick="ynCheck(this,'chk${i}','No')">No</button>
+      </div>`;
+    wrap.appendChild(div);
+  });
+}
+
+const checkState = {};
+function ynCheck(btn, key, val) {
+  btn.closest('.yn').querySelectorAll('.yn-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  checkState[key] = val;
+}
+
+/* ──────────────────────────────────────────────────────────
+   BUILD AIRFLOW TABLE
+   ────────────────────────────────────────────────────────── */
+const defaultRooms = ['Lounge','Dining','Bed 1','Bed 2','Bed 3','Bed 4'];
+function buildAirflow() {
+  defaultRooms.forEach(r => addAfRow(r));
+}
+
+let afCount = 0;
+function addAfRow(name = '') {
+  afCount++;
+  const id = afCount;
+  const tr = document.createElement('tr');
+  tr.id = `af${id}`;
+  tr.innerHTML = `
+    <td><input type="text" value="${name}" placeholder="Room…" /></td>
+    <td><input type="text" placeholder="L/s" /></td>
+    <td><input type="text" placeholder="L/s" /></td>
+    <td><button class="af-del" onclick="rmAf('af${id}')">×</button></td>`;
+  document.getElementById('afBody').appendChild(tr);
+}
+function rmAf(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+/* ──────────────────────────────────────────────────────────
+   ITEMS SOLD TABLE
+   ────────────────────────────────────────────────────────── */
+let iCount = 0;
+function addItemRow() {
+  iCount++;
+  const id = iCount;
+  const tr = document.createElement('tr');
+  tr.id = `ir${id}`;
+  tr.innerHTML = `
+    <td><input type="text"   id="d${id}" placeholder="Description" /></td>
+    <td><input type="number" id="q${id}" placeholder="0" min="0" step="1"    oninput="calcRow(${id})" style="text-align:center" /></td>
+    <td><input type="number" id="p${id}" placeholder="0.00" min="0" step="0.01" oninput="calcRow(${id})" /></td>
+    <td><input type="text"   id="t${id}" placeholder="$0.00" readonly style="font-weight:600;color:var(--red)" /></td>
+    <td><button class="del-btn" onclick="rmItem(${id})">×</button></td>`;
+  document.getElementById('itemsBody').appendChild(tr);
+}
+function rmItem(id) {
+  const el = document.getElementById(`ir${id}`);
+  if (el) el.remove();
+  recalc();
+}
+function calcRow(id) {
+  const q = parseFloat(document.getElementById(`q${id}`)?.value) || 0;
+  const p = parseFloat(document.getElementById(`p${id}`)?.value) || 0;
+  const t = q * p;
+  const el = document.getElementById(`t${id}`);
+  if (el) el.value = t > 0 ? `$${t.toFixed(2)}` : '';
+  recalc();
+}
+function recalc() {
+  let sub = 0;
+  for (let i = 1; i <= iCount; i++) {
+    const q = parseFloat(document.getElementById(`q${i}`)?.value) || 0;
+    const p = parseFloat(document.getElementById(`p${i}`)?.value) || 0;
+    sub += q * p;
+  }
+  const gstAmt = sub * CONFIG.gstRate;
+  document.getElementById('subtotal').textContent = `$${sub.toFixed(2)}`;
+  document.getElementById('gst').textContent      = `$${gstAmt.toFixed(2)}`;
+  document.getElementById('total').textContent    = `$${(sub + gstAmt).toFixed(2)}`;
+}
+
+/* ──────────────────────────────────────────────────────────
+   UI HELPERS
+   ────────────────────────────────────────────────────────── */
+function solo(el, groupId) {
+  document.getElementById(groupId).querySelectorAll('.chip:not(.multi)').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  el.querySelector('input').checked = true;
+}
+function multi(e, el) {
+  e.preventDefault();
+  el.classList.toggle('sel');
+  el.querySelector('input').checked = el.classList.contains('sel');
+}
+function yn(btn, key, val) {
+  btn.closest('.yn').querySelectorAll('.yn-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  S[key] = val;
+}
+function pickResult(el) {
+  document.querySelectorAll('.res-opt').forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+  el.querySelector('input').checked = true;
+}
+function showOther(el) {
+  const isOther = el.dataset.other === '1';
+  document.getElementById('otherModelFg').style.display = isOther ? 'block' : 'none';
+}
+
+/* ──────────────────────────────────────────────────────────
+   SIGNATURE PADS
+   ────────────────────────────────────────────────────────── */
+const pads = {};
+function initPad(canvasId, key) {
+  if (pads[key]) return;
+  const cv = document.getElementById(canvasId);
+  const ctx = cv.getContext('2d');
+  cv.width  = cv.offsetWidth  * (window.devicePixelRatio || 1);
+  cv.height = cv.offsetHeight * (window.devicePixelRatio || 1);
+  ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+  ctx.strokeStyle = '#1C1C1E'; ctx.lineWidth = 2;
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+
+  let drawing = false, drawn = false;
+  const pos = e => {
+    const r = cv.getBoundingClientRect();
+    const sx = cv.offsetWidth  / r.width;
+    const sy = cv.offsetHeight / r.height;
+    const src = e.touches ? e.touches[0] : e;
+    return { x: (src.clientX - r.left) * sx, y: (src.clientY - r.top) * sy };
+  };
+  const start = e => { e.preventDefault(); drawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
+  const move  = e => {
+    if (!drawing) return; e.preventDefault();
+    const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke();
+    if (!drawn) { drawn = true; document.getElementById(`${key}Ph`).style.display = 'none'; }
+  };
+  const stop  = () => { drawing = false; };
+  cv.addEventListener('mousedown',  start);
+  cv.addEventListener('mousemove',  move);
+  cv.addEventListener('mouseup',    stop);
+  cv.addEventListener('mouseleave', stop);
+  cv.addEventListener('touchstart', start, { passive: false });
+  cv.addEventListener('touchmove',  move,  { passive: false });
+  cv.addEventListener('touchend',   stop);
+
+  pads[key] = { cv, ctx, isDrawn: () => drawn, reset: () => { drawn = false; } };
+}
+function clearSig(key) {
+  const p = pads[key]; if (!p) return;
+  p.ctx.clearRect(0, 0, p.cv.width, p.cv.height);
+  p.reset();
+  document.getElementById(`${key}Ph`).style.display = '';
+}
+function initStep6() {
+  setTimeout(() => {
+    initPad('ownerCanvas', 'owner');
+    initPad('authCanvas',  'auth');
+  }, 80);
+}
+
+/* ──────────────────────────────────────────────────────────
+   RECEIPT PHOTO
+   ────────────────────────────────────────────────────────── */
+function compressImage(file, maxWidth = 1400, quality = 0.72) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handleReceipt(input) {
+  if (!input.files[0]) return;
+  showOverlay('Compressing image…');
+  RECEIPT_DATA = await compressImage(input.files[0]);
+  hideOverlay();
+  const preview = document.getElementById('receiptPreview');
+  preview.src = RECEIPT_DATA;
+  preview.style.display = 'block';
+  document.getElementById('receiptPh').style.display   = 'none';
+  document.getElementById('receiptZone').classList.add('filled');
+  document.getElementById('receiptClearBtn').style.display = 'inline-flex';
+}
+
+function clearReceipt() {
+  RECEIPT_DATA = '';
+  document.getElementById('receiptPreview').style.display  = 'none';
+  document.getElementById('receiptPh').style.display       = '';
+  document.getElementById('receiptZone').classList.remove('filled');
+  document.getElementById('receiptInput').value            = '';
+  document.getElementById('receiptClearBtn').style.display = 'none';
+}
+
+/* ──────────────────────────────────────────────────────────
+   STEP NAVIGATION
+   ────────────────────────────────────────────────────────── */
+function goTo(n) {
+  if (n < 1 || n > TOTAL) return;
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.ps').forEach(p => {
+    const s = +p.dataset.step;
+    p.classList.remove('active','done');
+    if (s === n) p.classList.add('active');
+    else if (s < n) p.classList.add('done');
+  });
+  document.getElementById(`panel-${n}`).classList.add('active');
+  step = n;
+  updateNav();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (n === 6) initStep6();
+
+  // Scroll active step into view in progress bar
+  const ps = document.querySelector(`.ps[data-step="${n}"]`);
+  if (ps) ps.scrollIntoView({ block: 'nearest', inline: 'center' });
+}
+function nextStep() { goTo(step + 1); }
+function prevStep() { goTo(step - 1); }
+function updateNav() {
+  document.getElementById('btnBack').style.display = step > 1 ? 'block' : 'none';
+  const next = document.getElementById('btnNext');
+  next.style.display = step < TOTAL ? 'block' : 'none';
+}
+
+/* ──────────────────────────────────────────────────────────
+   COLLECT DATA
+   ────────────────────────────────────────────────────────── */
+function collect() {
+  // Checklist
+  const checks = {};
+  CHECKS.forEach((c, i) => { checks[c.label.replace(/&amp;/g,'&')] = checkState[`chk${i}`] || '—'; });
+
+  // Accessories
+  const accessories = Array.from(document.querySelectorAll('[name="acc"]:checked')).map(e => e.value);
+
+  // Items
+  const items = [];
+  for (let i = 1; i <= iCount; i++) {
+    const desc = document.getElementById(`d${i}`)?.value;
+    const qty  = document.getElementById(`q${i}`)?.value;
+    const price= document.getElementById(`p${i}`)?.value;
+    const tot  = document.getElementById(`t${i}`)?.value;
+    if (document.getElementById(`ir${i}`) && (desc || qty || price)) {
+      items.push({ desc: desc||'', qty: qty||'', price: parseFloat(price||0).toFixed(2), total: tot||'$0.00' });
+    }
+  }
+
+  // Airflow rows
+  const airflow = [];
+  document.querySelectorAll('#afBody tr').forEach(tr => {
+    const ins = tr.querySelectorAll('input');
+    if (ins.length >= 3 && ins[0].value) {
+      airflow.push({ room: ins[0].value, before: ins[1].value, after: ins[2].value });
+    }
+  });
+
+  const v = id => (document.getElementById(id)?.value || '').trim();
+  const r = name => document.querySelector(`[name="${name}"]:checked`)?.value || '';
+
+  return {
+    customerName: v('cName'), address: v('cAddr'),
+    phone: v('cPhone'), mobile: v('cMobile'),
+    email: v('confirmEmail') || v('cEmail'),
+    serviceDate: v('sDate'), serviceTime: v('sTime'),
+    servicePerson: v('sPerson'),
+    ownerPresent: r('owner'), tenantPresent: r('tenant'),
+    insulation: S.insulation, soffit: S.soffit,
+    primaryHeating: r('heat'),
+    systemModel: r('model') === 'Other' ? v('otherModel') : r('model'),
+    accessories,
+    notes: v('notes'),
+    checks,
+    airflow,
+    houseTemp: v('houseTemp'),
+    roofTemp:  v('roofTemp'),
+    setTemp:   v('setTemp'),
+    serviceResult: r('result'),
+    resultComments: v('resultComments'),
+    upgradeNotes: v('upgradeNotes'),
+    items,
+    subtotal: document.getElementById('subtotal').textContent,
+    gst:      document.getElementById('gst').textContent,
+    total:    document.getElementById('total').textContent,
+    paymentMethod: r('pay'),
+    marketingConsent: document.getElementById('mktConsent').checked ? 'Yes' : 'No',
+    receiptData: RECEIPT_DATA,
+    ownerSig: pads['owner']?.cv.toDataURL('image/png') || '',
+    authSig:  pads['auth']?.cv.toDataURL('image/png')  || '',
+  };
+}
+
+/* ──────────────────────────────────────────────────────────
+   PDF GENERATION  (pure jsPDF, no html2canvas)
+   ────────────────────────────────────────────────────────── */
+function makePDF(d) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+  const W = 210, M = 13;
+  let y = 0;
+  const RW = W - M * 2;           // usable row width
+  const col2 = W / 2 + 4;         // right column X
+
+  /* helpers */
+  const rgb   = (...c) => doc.setTextColor(...c);
+  const fill  = (...c) => doc.setFillColor(...c);
+  const draw  = (...c) => doc.setDrawColor(...c);
+  const f     = (sz, st='normal') => { doc.setFontSize(sz); doc.setFont('helvetica', st); };
+  const val   = v => v || '—';
+
+  /* ── HEADER ── */
+  fill(40, 160, 216); doc.rect(0, 0, W, 28, 'F');
+  f(13,'bold'); rgb(255,255,255);
+  doc.text('VENTILATION SYSTEM SERVICE FORM', M, 10);
+  f(7,'normal');
+  doc.text('Cristal Air International Ltd T/A HRV Home Solutions', M, 15);
+  doc.text("45 O'Rorke Rd, Penrose, Auckland 1061  ·  PO Box 12722, Penrose, Auckland 1642", M, 19);
+  doc.text('0800 478 123  |  hrv.co.nz', M, 23);
+
+  // HRV logo
+  fill(255,255,255); doc.roundedRect(158, 4, 40, 20, 2, 2, 'F');
+  if (LOGO_DATA) {
+    doc.addImage(LOGO_DATA, 'JPEG', 159, 5, 38, 18);
+  } else {
+    f(13,'bold'); rgb(8,126,188); doc.text('HRV', 178, 16.5, { align: 'center' });
+  }
+
+  // Invoice bar
+  fill(242,242,247); doc.rect(0, 28, W, 7, 'F');
+  f(7.5,'normal'); rgb(108,108,112);
+  const invNo = `INV-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.floor(Math.random()*9000+1000)}`;
+  doc.text(`Tax Invoice  ·  GST 090-464-779  ·  ${invNo}`, M, 33);
+  rgb(8,126,188); doc.text('FV', W - M, 33, { align: 'right' });
+
+  y = 40;
+
+  /* ── section heading ── */
+  const sec = (title) => {
+    if (y > 260) { doc.addPage(); y = 14; }
+    fill(8,126,188); doc.rect(M, y, RW, 6.5, 'F');
+    f(8,'bold'); rgb(255,255,255);
+    doc.text(title, M + 2, y + 4.5);
+    y += 9;
+  };
+
+  /* ── label + value (single field) ── */
+  const fld = (label, value, x, maxW) => {
+    f(6.5,'normal'); rgb(108,108,112); doc.text(label.toUpperCase(), x, y);
+    f(9,'bold');     rgb(28,28,30);    doc.text(doc.splitTextToSize(val(value), maxW||80)[0], x, y + 4);
+  };
+
+  /* ── two-column field rows ── */
+  const twoCol = (pairs) => {
+    const half = Math.ceil(pairs.length / 2);
+    const L = pairs.slice(0, half), R = pairs.slice(half);
+    const startY = y;
+    L.forEach(([lb, vl]) => { fld(lb, vl, M,       85); y += 10; });
+    y = startY;
+    R.forEach(([lb, vl]) => { fld(lb, vl, col2, 85); y += 10; });
+    y = startY + Math.max(L.length, R.length) * 10 + 2;
+  };
+
+  /* ─────────── CUSTOMER INFO ─────────── */
+  sec('CUSTOMER INFORMATION');
+  twoCol([
+    ['Customer Name', d.customerName], ['Address',        d.address],
+    ['Phone',         d.phone],        ['Mobile',         d.mobile],
+    ['Email',         d.email],        ['Service Date',   d.serviceDate],
+    ['Service Time',  d.serviceTime],  ['Service Person', d.servicePerson],
+  ]);
+  twoCol([
+    ['Owner Present', d.ownerPresent], ['Tenant Present', d.tenantPresent],
+    ['Insulation',    d.insulation],   ['Soffit',         d.soffit],
+    ['Primary Heating', d.primaryHeating], ['System Model', d.systemModel],
+  ]);
+
+  if (d.accessories.length) {
+    f(6.5,'normal'); rgb(108,108,112); doc.text('ACCESSORIES FITTED', M, y);
+    f(8,'normal');   rgb(28,28,30);
+    doc.text(doc.splitTextToSize(d.accessories.join(', '), RW), M, y + 4);
+    y += 10;
+  }
+  if (d.notes) {
+    f(6.5,'normal'); rgb(108,108,112); doc.text('NOTES', M, y);
+    f(8,'normal');   rgb(28,28,30);
+    const ls = doc.splitTextToSize(d.notes, RW);
+    doc.text(ls, M, y + 4); y += ls.length * 4 + 6;
+  }
+
+  /* ─────────── SERVICE CHECKLIST ─────────── */
+  sec('SYSTEM SERVICE CHECK');
+  const entries = Object.entries(d.checks);
+  const half = Math.ceil(entries.length / 2);
+  const Lc = entries.slice(0, half), Rc = entries.slice(half);
+  const cY = y;
+  Lc.forEach(([label, v2]) => {
+    const col = v2 === 'Yes' ? [52,199,89] : v2 === 'No' ? [255,59,48] : [180,180,180];
+    fill(...col); doc.circle(M + 2, y + 2, 2, 'F');
+    f(7.5,'normal'); rgb(28,28,30);
+    doc.text(label, M + 6, y + 3); y += 6;
+  });
+  y = cY;
+  Rc.forEach(([label, v2]) => {
+    const col = v2 === 'Yes' ? [52,199,89] : v2 === 'No' ? [255,59,48] : [180,180,180];
+    fill(...col); doc.circle(col2 + 2, y + 2, 2, 'F');
+    f(7.5,'normal'); rgb(28,28,30);
+    doc.text(label, col2 + 6, y + 3); y += 6;
+  });
+  y = cY + Math.max(Lc.length, Rc.length) * 6 + 4;
+
+  /* ─────────── AIRFLOW & TEMPS ─────────── */
+  sec('AIRFLOW & TEMPERATURE READINGS');
+
+  // Airflow table header
+  const afX = [M, M+50, M+95];
+  f(7,'bold'); rgb(108,108,112);
+  ['LOCATION','BEFORE SERVICE','AFTER SERVICE'].forEach((h, i) => doc.text(h, afX[i], y));
+  y += 2; draw(229,229,234); doc.line(M, y, W - M, y); y += 4;
+
+  d.airflow.forEach(r => {
+    f(8,'normal'); rgb(28,28,30);
+    doc.text(r.room||'', afX[0], y);
+    doc.text(r.before||'—', afX[1], y);
+    doc.text(r.after ||'—', afX[2], y);
+    doc.line(M, y + 1.5, W - M, y + 1.5); y += 5.5;
+  });
+  y += 3;
+
+  // Temps
+  const tCols = [M, M+60, M+120];
+  const sy = y;
+  [['House Temp', d.houseTemp+' °C'], ['Roof Temp', d.roofTemp+' °C'], ['Set Temp', d.setTemp+' °C']]
+    .forEach(([lb, vl], ci) => { fld(lb, vl, tCols[ci], 55); });
+  y = sy + 10 + 4;
+
+  /* ─────────── SERVICE RESULTS ─────────── */
+  sec('SERVICE RESULTS');
+  f(10,'bold'); rgb(8,126,188); doc.text(val(d.serviceResult), M, y + 4); y += 8;
+  if (d.resultComments) {
+    f(8,'normal'); rgb(28,28,30);
+    const ls = doc.splitTextToSize(d.resultComments, RW);
+    doc.text(ls, M, y); y += ls.length * 4 + 4;
+  }
+  if (d.upgradeNotes) {
+    f(6.5,'normal'); rgb(108,108,112); doc.text('UPGRADE RECOMMENDATION', M, y); y += 4;
+    f(8,'normal'); rgb(28,28,30);
+    const ls = doc.splitTextToSize(d.upgradeNotes, RW);
+    doc.text(ls, M, y); y += ls.length * 4 + 4;
+  }
+
+  /* ─────────── ITEMS SOLD ─────────── */
+  if (d.items.length) {
+    sec('ITEMS SOLD');
+    const iX = [M, M+88, M+118, M+148];
+    fill(242,242,247); doc.rect(M, y, RW, 6, 'F');
+    f(7,'bold'); rgb(28,28,30);
+    ['DESCRIPTION','QTY','UNIT PRICE','TOTAL'].forEach((h, i) => doc.text(h, iX[i], y + 4));
+    y += 7;
+    d.items.forEach(it => {
+      f(8,'normal'); rgb(28,28,30);
+      doc.text(doc.splitTextToSize(it.desc, 84)[0], iX[0], y + 3);
+      doc.text(it.qty,   iX[1], y + 3);
+      doc.text(`$${it.price}`, iX[2], y + 3);
+      doc.text(it.total, iX[3], y + 3);
+      draw(229,229,234); doc.line(M, y + 5.5, W - M, y + 5.5); y += 7;
+    });
+    y += 2;
+    const tx = W - M - 58;
+    [['Sub-total', d.subtotal], ['GST (15%)', d.gst]].forEach(([lb, vl]) => {
+      f(8,'normal'); rgb(108,108,112); doc.text(lb, tx, y);
+      rgb(28,28,30); doc.text(vl, W - M, y, { align:'right' }); y += 5;
+    });
+    draw(28,28,30); doc.line(tx, y, W - M, y); y += 3;
+    f(10,'bold'); rgb(8,126,188);
+    doc.text('TOTAL', tx, y + 3); doc.text(d.total, W - M, y + 3, { align:'right' }); y += 9;
+  }
+
+  f(7.5,'normal'); rgb(108,108,112);
+  doc.text(`Payment Method: ${d.paymentMethod||'—'}`, M, y); y += 7;
+
+  /* ─────────── SIGNATURES ─────────── */
+  if (y > 240) { doc.addPage(); y = 14; }
+  sec('SIGNATURES');
+  const sigW = RW / 2 - 5;
+  ['Owner / Occupier','Authorised HRV'].forEach((lb, i) => {
+    const sx = M + i * (sigW + 10);
+    f(6.5,'normal'); rgb(108,108,112); doc.text(lb.toUpperCase(), sx, y);
+    draw(229,229,234); doc.rect(sx, y + 2, sigW, 24);
+    const sig = i === 0 ? d.ownerSig : d.authSig;
+    if (sig && sig.length > 100) {
+      try { doc.addImage(sig, 'PNG', sx + 1, y + 3, sigW - 2, 22); } catch(e) {}
+    }
+  });
+  y += 30;
+
+  f(7,'normal'); rgb(108,108,112);
+  doc.text(`Marketing consent: ${d.marketingConsent}`, M, y); y += 8;
+
+  /* ─────────── LEGAL FOOTER ─────────── */
+  if (y > 255) { doc.addPage(); y = 14; }
+  fill(242,242,247); doc.rect(0, y, W, 34, 'F');
+  f(6.2,'normal'); rgb(108,108,112);
+  const legal = 'Owner acknowledges by signing above that a final walkthrough has been done and a filter change service check has been completed, and the HRV System is working to their satisfaction. The standard manufacturer warranty shall apply. IMPORTANT — Authentic parts supplied by HRV are required in your HRV system to ensure your system remains warranted. If goods were purchased during an "uninvited direct sale" within the Fair Trading Act 1986, you have the right to cancel this Agreement within 5 working days. I understand that to ensure optimum performance of my system, I should service my system and change the filter every 24 months. (F7 filters must be changed every 12 months for HRV Lite systems.) *F7 filter used for HRV Lite systems.';
+  const legalLines = doc.splitTextToSize(legal, RW);
+  doc.text(legalLines, M, y + 5);
+
+  /* ─────────── FOOTER BAND ─────────── */
+  fill(8,126,188); doc.rect(0, 287, W, 10, 'F');
+  f(7,'normal'); rgb(255,255,255);
+  doc.text('CUSTOMER COPY', M, 293);
+  doc.text(`${invNo}  ·  ${new Date().toLocaleString('en-NZ')}`, W - M, 293, { align: 'right' });
+
+  /* ─────────── PAYMENT RECEIPT PHOTO ─────────── */
+  if (d.receiptData && d.receiptData.length > 100) {
+    doc.addPage();
+    // Page header band
+    fill(8,126,188); doc.rect(0, 0, W, 14, 'F');
+    f(9,'bold'); rgb(255,255,255);
+    doc.text('PAYMENT RECEIPT', M, 9.5);
+    doc.text(invNo, W - M, 9.5, { align: 'right' });
+
+    // Fit image within the page keeping aspect ratio
+    const props   = doc.getImageProperties(d.receiptData);
+    const maxW    = W - M * 2;
+    const maxH    = 255;
+    let imgW = maxW;
+    let imgH = maxW * props.height / props.width;
+    if (imgH > maxH) { imgH = maxH; imgW = maxH * props.width / props.height; }
+    const imgX = M + (maxW - imgW) / 2;
+    doc.addImage(d.receiptData, 'JPEG', imgX, 20, imgW, imgH);
+
+    // Footer band
+    fill(8,126,188); doc.rect(0, 287, W, 10, 'F');
+    f(7,'normal'); rgb(255,255,255);
+    doc.text('Payment receipt captured on site', M, 293);
+    doc.text(new Date().toLocaleString('en-NZ'), W - M, 293, { align: 'right' });
+  }
+
+  return { doc, invNo };
+}
+
+/* ──────────────────────────────────────────────────────────
+   DOWNLOAD PDF
+   ────────────────────────────────────────────────────────── */
+async function downloadPDF() {
+  showOverlay('Generating PDF…');
+  try {
+    await ensureLogo();
+    const d = collect();
+    const { doc } = makePDF(d);
+    const name = `HRV_Service_${(d.customerName||'Customer').replace(/\s+/g,'_')}_${d.serviceDate||'today'}.pdf`;
+    doc.save(name);
+    toast('PDF downloaded ✓');
+  } catch(e) {
+    console.error(e);
+    toast('Error generating PDF — see console');
+  }
+  hideOverlay();
+}
+
+/* ──────────────────────────────────────────────────────────
+   SEND EMAILS (EmailJS)
+   ────────────────────────────────────────────────────────── */
+async function sendEmails() {
+  const d = collect();
+  if (!d.email) { toast('Please enter customer email address'); return; }
+
+  showOverlay('Generating PDF…');
+  await ensureLogo();
+  let doc, invNo;
+  try {
+    ({ doc, invNo } = makePDF(d));
+  } catch(e) {
+    hideOverlay(); toast('Error generating PDF'); return;
+  }
+
+  const fileName = `HRV_Service_${(d.customerName||'Customer').replace(/\s+/g,'_')}_${d.serviceDate||'today'}.pdf`;
+
+  // ── Fallback: webhook not configured ──────────────────────
+  if (CONFIG.webhookUrl === 'YOUR_POWER_AUTOMATE_WEBHOOK_URL') {
+    doc.save(fileName);
+    hideOverlay();
+    const subj = encodeURIComponent(`Your HRV Service Report — ${d.serviceDate}`);
+    const body = encodeURIComponent(`Dear ${d.customerName},\n\nPlease find your HRV Service Report attached (${fileName}).\n\nThank you for choosing HRV.\n\n${CONFIG.companyName}`);
+    window.location.href = `mailto:${d.email}?subject=${subj}&body=${body}`;
+    toast('Webhook not set — PDF saved & email client opened.');
+    return;
+  }
+
+  // ── POST to Power Automate ─────────────────────────────────
+  showOverlay('Sending to Power Automate…');
+
+  // Raw base64 only (no data-URI prefix) — easier for PA to handle
+  const pdfBase64 = doc.output('datauristring').split(',')[1];
+
+  const payload = {
+    customerName:  d.customerName,
+    address:       d.address,
+    customerEmail: d.email,
+    servicePerson: d.servicePerson,
+    serviceDate:   d.serviceDate,
+    serviceTime:   d.serviceTime,
+    serviceResult: d.serviceResult,
+    totalAmount:   d.total,
+    pdfFileName:   fileName,
+    pdfBase64:     pdfBase64,
+  };
+
+  try {
+    const resp = await fetch(CONFIG.webhookUrl, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(payload),
+    });
+
+    // Power Automate HTTP trigger returns 202 Accepted on success
+    if (resp.ok || resp.status === 202) {
+      hideOverlay();
+      toast('Report sent to Power Automate ✓');
+    } else {
+      throw new Error(`Server responded with HTTP ${resp.status}`);
+    }
+  } catch(e) {
+    console.error('Webhook POST failed:', e);
+    // Always give the technician the PDF even if the send fails
+    doc.save(fileName);
+    hideOverlay();
+    toast('Send failed — PDF downloaded as backup. Check webhook URL.');
+  }
+}
+
+/* ──────────────────────────────────────────────────────────
+   UI UTILITIES
+   ────────────────────────────────────────────────────────── */
+function showOverlay(msg) {
+  document.getElementById('overlayMsg').textContent = msg;
+  document.getElementById('overlay').classList.add('on');
+}
+function hideOverlay() {
+  document.getElementById('overlay').classList.remove('on');
+}
+let _t;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(_t); _t = setTimeout(() => el.classList.remove('show'), 3600);
+}
+</script>
+</body>
+</html>

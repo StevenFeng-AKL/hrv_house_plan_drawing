@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import DrawingWorkspace from './components/DrawingWorkspace';
+import ServiceForm from './components/ServiceForm';
 import './App.css';
 
 function App() {
+  if (window.location.pathname === '/service-form') {
+    return <ServiceForm />;
+  }
+
   const [params, setParams] = useState(null);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
