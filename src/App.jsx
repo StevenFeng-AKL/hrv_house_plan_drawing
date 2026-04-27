@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import DrawingWorkspace from './components/DrawingWorkspace';
 import ServiceForm from './components/ServiceForm';
+import InstallAssessment from './components/InstallAssessment';
 import './App.css';
 
 function App() {
   if (window.location.hash === '#service-form') {
     return <ServiceForm />;
+  }
+  if (window.location.hash === '#installassessment') {
+    return <InstallAssessment />;
   }
 
   const [params, setParams] = useState(null);

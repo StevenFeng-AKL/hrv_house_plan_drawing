@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HRV — Installation Assessment Form</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --red:    #087ebc;
+      --red-dk: #06699e;
+      --red-lt: #e0f2fb;
+      --dark:   #1C1C1E;
+      --mid:    #6C6C70;
+      --bg:     #F2F2F7;
+      --card:   #FFFFFF;
+      --border: #E5E5EA;
+      --inbg:   #F8F8F8;
+      --green:  #34C759;
+      --orange: #FF9500;
+      --radius: 12px;
+      --shadow: 0 1px 4px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.06);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--dark); min-height: 100vh; padding-bottom: 72px; }
+
+    /* Header */
+    .app-header { background: var(--red); color: #fff; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 200; box-shadow: 0 2px 10px rgba(0,0,0,.25); }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-logo { width: 52px; height: 52px; background: #fff; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 2px; }
+    .brand-logo img { width: 100%; height: 100%; object-fit: contain; }
+    .brand-text h1 { font-size: 17px; font-weight: 700; line-height: 1.25; }
+    .brand-text p  { font-size: 11px; opacity: .82; }
+    .header-meta   { text-align: right; font-size: 11px; line-height: 1.6; opacity: .92; }
+    .header-meta strong { font-size: 12px; }
+
+    /* Progress */
+    .progress-wrap { background: #fff; border-bottom: 1px solid var(--border); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .progress-wrap::-webkit-scrollbar { display: none; }
+    .progress-steps { display: flex; min-width: max-content; }
+    .ps { display: flex; align-items: center; gap: 7px; padding: 12px 18px; border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap; transition: all .2s; user-select: none; }
+    .ps:hover { background: var(--bg); }
+    .ps.active { border-bottom-color: var(--red); color: var(--red); }
+    .ps.done   { color: var(--green); }
+    .ps-num { width: 22px; height: 22px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+    .ps.active .ps-num { background: var(--red);   color: #fff; }
+    .ps.done   .ps-num { background: var(--green); color: #fff; }
+    .ps-label { font-size: 13px; font-weight: 500; }
+
+    /* Layout */
+    .main { max-width: 780px; margin: 0 auto; padding: 22px 16px; }
+    .step-panel { display: none; }
+    .step-panel.active { display: block; }
+
+    /* Card */
+    .card { background: var(--card); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow); }
+    .card-title { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; padding-bottom: 12px; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .card-title .ci { width: 28px; height: 28px; border-radius: 6px; background: var(--red-lt); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+
+    /* Form elements */
+    .row   { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .row.x3 { grid-template-columns: 1fr 1fr 1fr; }
+    .row.x1 { grid-template-columns: 1fr; }
+    @media (max-width: 500px) { .row, .row.x3 { grid-template-columns: 1fr; } }
+    .fg { display: flex; flex-direction: column; gap: 5px; }
+    .fg label { font-size: 11px; font-weight: 700; color: var(--mid); text-transform: uppercase; letter-spacing: .5px; }
+    .fg input, .fg select, .fg textarea { padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 15px; background: var(--inbg); color: var(--dark); font-family: inherit; width: 100%; transition: border-color .18s, background .18s; }
+    .fg input:focus, .fg select:focus, .fg textarea:focus { outline: none; border-color: var(--red); background: #fff; }
+    .fg textarea { resize: vertical; min-height: 72px; }
+    .fg input[readonly] { background: var(--red-lt); border-color: var(--red); color: var(--red); font-weight: 700; cursor: default; }
+
+    /* Chips */
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { display: flex; align-items: center; gap: 5px; padding: 8px 14px; border: 1.5px solid var(--border); border-radius: 20px; cursor: pointer; font-size: 14px; background: var(--inbg); transition: all .17s; user-select: none; }
+    .chip:hover { border-color: var(--red); }
+    .chip input { display: none; }
+    .chip.sel { background: var(--red-lt); border-color: var(--red); color: var(--red); font-weight: 600; }
+
+    /* Yes / No toggle */
+    .yn { display: flex; border-radius: 8px; overflow: hidden; border: 1.5px solid var(--border); width: fit-content; }
+    .yn-btn { padding: 8px 20px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; background: var(--inbg); color: var(--mid); transition: all .15s; font-family: inherit; }
+    .yn-btn:first-child { border-right: 1px solid var(--border); }
+    .yn-btn.y.on { background: var(--green); color: #fff; }
+    .yn-btn.n.on { background: #FF3B30; color: #fff; }
+
+    /* Section sub-label */
+    .sub-hd { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .7px; color: var(--red); margin: 18px 0 10px; }
+
+    /* Radio option cards */
+    .res-grid    { display: grid; grid-template-columns: 1fr 1fr;     gap: 10px; margin-top: 8px; }
+    .res-grid.x3 { grid-template-columns: 1fr 1fr 1fr; }
+    @media (max-width: 480px) { .res-grid, .res-grid.x3 { grid-template-columns: 1fr; } }
+    .res-opt { border: 2px solid var(--border); border-radius: 10px; padding: 14px 16px; cursor: pointer; transition: all .2s; display: flex; align-items: center; gap: 10px; background: var(--inbg); }
+    .res-opt:hover { border-color: var(--red); }
+    .res-opt.sel   { border-color: var(--red); background: var(--red-lt); }
+    .res-opt input { display: none; }
+    .res-icon  { font-size: 20px; flex-shrink: 0; }
+    .res-label { font-size: 14px; font-weight: 600; }
+    .res-sub   { font-size: 11px; color: var(--mid); font-weight: 400; margin-top: 2px; }
+
+    /* H&S checklist with comments */
+    .hs-item { padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .hs-item:last-child { border-bottom: none; }
+    .hs-row  { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+    .hs-label { font-size: 14px; font-weight: 500; flex: 1; }
+    .hs-comment textarea { width: 100%; padding: 8px 10px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; background: var(--inbg); color: var(--dark); font-family: inherit; resize: vertical; min-height: 44px; }
+    .hs-comment textarea:focus { outline: none; border-color: var(--red); background: #fff; }
+
+    /* Calculation result cards */
+    .calc-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 12px; }
+    @media (max-width: 480px) { .calc-grid { grid-template-columns: 1fr; } }
+    .calc-card { background: var(--inbg); border-radius: 10px; padding: 14px; text-align: center; transition: background .25s, border .25s; border: 2px solid transparent; }
+    .calc-card.pass { background: #e0f2fb; border-color: var(--red); }
+    .calc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--mid); margin-bottom: 6px; }
+    .calc-val   { font-size: 22px; font-weight: 700; color: var(--red); }
+    .calc-unit  { font-size: 11px; color: var(--mid); margin-top: 2px; }
+
+    /* Notes */
+    .note { background: #EEF4FF; border-left: 3px solid #2563EB; border-radius: 0 8px 8px 0; padding: 10px 14px; font-size: 13px; color: #1E40AF; line-height: 1.55; margin-bottom: 16px; }
+    .warn-note { background: #FFFBEB; border-left: 3px solid var(--orange); border-radius: 0 8px 8px 0; padding: 10px 14px; font-size: 13px; color: #92400E; line-height: 1.55; margin-bottom: 16px; }
+    .card-note { background: #EEF4FF; border-left: 3px solid #2563EB; border-radius: 0 8px 8px 0; padding: 9px 12px; font-size: 12px; color: #1E40AF; margin-bottom: 14px; }
+
+    /* Signature */
+    .sig-wrap { position: relative; border: 2px solid var(--border); border-radius: 8px; overflow: hidden; background: #FAFAFA; }
+    .sig-canvas { display: block; width: 100%; height: 150px; cursor: crosshair; touch-action: none; }
+    .sig-clear { position: absolute; top: 8px; right: 8px; padding: 4px 10px; background: rgba(255,255,255,.9); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 12px; color: var(--mid); font-family: inherit; }
+    .sig-ph { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 13px; color: var(--mid); pointer-events: none; }
+
+    /* Buttons */
+    .send-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+    .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid var(--border); padding: 10px 16px; display: flex; gap: 10px; z-index: 150; }
+    .btn { padding: 12px 24px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; border: none; transition: all .18s; font-family: inherit; }
+    .btn-primary   { background: var(--red);   color: #fff; flex: 1; }
+    .btn-primary:hover   { background: var(--red-dk); }
+    .btn-secondary { background: var(--inbg);  color: var(--dark); border: 1.5px solid var(--border); }
+    .btn-secondary:hover { background: var(--border); }
+    .btn-outline { background: transparent; border: 2px solid var(--red); color: var(--red); }
+    .btn-outline:hover { background: var(--red-lt); }
+    .btn-green { background: var(--green); color: #fff; }
+    .btn-green:hover { background: #28A745; }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 76px; left: 50%; transform: translateX(-50%) translateY(14px); background: #1C1C1E; color: #fff; padding: 11px 22px; border-radius: 20px; font-size: 14px; opacity: 0; transition: all .28s; pointer-events: none; z-index: 999; white-space: nowrap; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* Overlay */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.48); display: none; align-items: center; justify-content: center; z-index: 9999; }
+    .overlay.on { display: flex; }
+    .overlay-card { background: #fff; border-radius: 16px; padding: 30px; text-align: center; min-width: 180px; }
+    .spinner { width: 38px; height: 38px; border: 4px solid var(--border); border-top-color: var(--red); border-radius: 50%; animation: spin .75s linear infinite; margin: 0 auto 14px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .overlay-card p { font-size: 14px; color: var(--mid); }
+
+    /* Config banner */
+    .cfg-banner { background: #FFF8E7; border: 1px solid #F59E0B; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #78350F; line-height: 1.5; margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+
+<div class="overlay" id="overlay">
+  <div class="overlay-card"><div class="spinner"></div><p id="overlayMsg">Please wait…</p></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<header class="app-header">
+  <div class="brand">
+    <div class="brand-logo"><img src="HRV2.jpg" alt="HRV Logo" /></div>
+    <div class="brand-text">
+      <h1>Installation Assessment Form</h1>
+      <p>Ventilation / Sonair / Heat Pump</p>
+    </div>
+  </div>
+  <div class="header-meta">
+    <div>0800 478 123</div>
+    <div>hrv.co.nz</div>
+    <strong>HRV NZ Limited</strong>
+  </div>
+</header>
+
+<div class="progress-wrap">
+  <div class="progress-steps" id="progressSteps">
+    <div class="ps active" data-step="1" onclick="goTo(1)"><div class="ps-num">1</div><span class="ps-label">Customer</span></div>
+    <div class="ps"        data-step="2" onclick="goTo(2)"><div class="ps-num">2</div><span class="ps-label">Home Details</span></div>
+    <div class="ps"        data-step="3" onclick="goTo(3)"><div class="ps-num">3</div><span class="ps-label">Install Items</span></div>
+    <div class="ps"        data-step="4" onclick="goTo(4)"><div class="ps-num">4</div><span class="ps-label">Health &amp; Safety</span></div>
+    <div class="ps"        data-step="5" onclick="goTo(5)"><div class="ps-num">5</div><span class="ps-label">Calculations</span></div>
+    <div class="ps"        data-step="6" onclick="goTo(6)"><div class="ps-num">6</div><span class="ps-label">Installation</span></div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ══ STEP 1 · Customer ══════════════════════════════════ -->
+  <div class="step-panel active" id="panel-1">
+    <div class="card">
+      <div class="card-title"><div class="ci">👤</div> Customer Details</div>
+      <div class="row x1"><div class="fg">
+        <label>Customer's Name</label>
+        <input type="text" id="cName" placeholder="Full name" />
+      </div></div>
+      <div class="row x1"><div class="fg">
+        <label>Customer's Address</label>
+        <input type="text" id="cAddr" placeholder="Street address, Suburb, City" />
+      </div></div>
+      <div class="row">
+        <div class="fg"><label>Home Phone</label><input type="tel" id="cHomePhone" placeholder="09 000 0000" /></div>
+        <div class="fg"><label>Work Phone</label><input type="tel" id="cWorkPhone" placeholder="09 000 0000" /></div>
+      </div>
+      <div class="row">
+        <div class="fg"><label>Mobile Phone</label><input type="tel" id="cMobile" placeholder="021 000 0000" /></div>
+        <div class="fg"><label>E-mail Address</label><input type="email" id="cEmail" placeholder="customer@email.com" oninput="document.getElementById('confirmEmail').value=this.value" /></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ STEP 2 · Home Details ══════════════════════════════ -->
+  <div class="step-panel" id="panel-2">
+
+    <div class="card">
+      <div class="card-title"><div class="ci">🏠</div> Property Information</div>
+      <div class="row">
+        <div class="fg"><label>Age of Home (years)</label><input type="number" id="homeAge" placeholder="e.g. 25" min="0" /></div>
+        <div class="fg">
+          <label>Cladding</label>
+          <select id="cladding">
+            <option value="">Select…</option>
+            <option>Cedar</option>
+            <option>Concrete</option>
+            <option>Hardiplank</option>
+            <option>Weatherboard</option>
+            <option>Brick</option>
+            <option>Plaster</option>
+            <option>Schist</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="fg">
+          <label>Roof Type</label>
+          <select id="roofType">
+            <option value="">Select…</option>
+            <option>Tin Tile</option>
+            <option>Decramastic Tile</option>
+            <option>Metal Tile</option>
+            <option>Shingle Tile</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Ceiling Type</label>
+          <select id="ceilingType">
+            <option value="">Select…</option>
+            <option>GIB</option>
+            <option>Brunt Iron</option>
+            <option>Fibreboard</option>
+            <option>Steel</option>
+            <option>Plaster</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="fg">
+          <label>Textured / Popcorn Ceiling?</label>
+          <div class="yn">
+            <button class="yn-btn y" onclick="ynF(this,'texturedCeiling','Yes')">Yes</button>
+            <button class="yn-btn n" onclick="ynF(this,'texturedCeiling','No')">No</button>
+          </div>
+        </div>
+        <div class="fg"><label># of Cavities</label><input type="number" id="numCavities" placeholder="e.g. 3" min="0" /></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="ci">🔍</div> Manhole &amp; Roof Cavity</div>
+      <div class="row">
+        <div class="fg"><label>Manhole Length mm <span style="color:var(--mid);font-weight:400">(min 400)</span></label><input type="number" id="manholeL" placeholder="400" min="0" /></div>
+        <div class="fg"><label>Manhole Width mm <span style="color:var(--mid);font-weight:400">(min 350)</span></label><input type="number" id="manholeW" placeholder="350" min="0" /></div>
+      </div>
+      <div class="row">
+        <div class="fg">
+          <label>Manhole Lifted?</label>
+          <div class="yn">
+            <button class="yn-btn y" onclick="ynF(this,'manholeLifted','Yes')">Yes</button>
+            <button class="yn-btn n" onclick="ynF(this,'manholeLifted','No')">No</button>
+          </div>
+        </div>
+        <div class="fg">
+          <label>Manhole Required?</label>
+          <div class="yn">
+            <button class="yn-btn y" onclick="ynF(this,'manholeRequired','Yes');toggleEl('manholeBookedRow',true)">Yes</button>
+            <button class="yn-btn n" onclick="ynF(this,'manholeRequired','No');toggleEl('manholeBookedRow',false)">No</button>
+          </div>
+        </div>
+      </div>
+      <div class="row x1" id="manholeBookedRow" style="display:none;">
+        <div class="fg"><label>Date Manhole Booked to be Made</label><input type="date" id="manholeDate" /></div>
+      </div>
+      <div class="row x1">
+        <div class="fg">
+          <label>Signs of Moisture in Roof Cavity? <span style="color:var(--orange);font-weight:500">(If yes — fresh air roof venting required)</span></label>
+          <div class="yn">
+            <button class="yn-btn y" onclick="ynF(this,'moistureSigns','Yes')">Yes</button>
+            <button class="yn-btn n" onclick="ynF(this,'moistureSigns','No')">No</button>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="fg">
+          <label>Roof Cavity Obstructions?</label>
+          <div class="yn">
+            <button class="yn-btn y" onclick="ynF(this,'roofObstructions','Yes')">Yes</button>
+            <button class="yn-btn n" onclick="ynF(this,'roofObstructions','No')">No</button>
+          </div>
+        </div>
+      </div>
+      <div class="fg" style="margin-top:8px;">
+        <label>Roof Cavity Height</label>
+        <div class="res-grid x3">
+          <label class="res-opt" onclick="pickCard(this,'roofCavityHeight')">
+            <input type="radio" name="roofCavityHeight" value="Low">
+            <span class="res-icon">📏</span>
+            <div><div class="res-label">Low</div><div class="res-sub">600mm – 1m</div></div>
+          </label>
+          <label class="res-opt" onclick="pickCard(this,'roofCavityHeight')">
+            <input type="radio" name="roofCavityHeight" value="Medium">
+            <span class="res-icon">📐</span>
+            <div><div class="res-label">Medium</div><div class="res-sub">1m – 1.5m</div></div>
+          </label>
+          <label class="res-opt" onclick="pickCard(this,'roofCavityHeight')">
+            <input type="radio" name="roofCavityHeight" value="High">
+            <span class="res-icon">🔝</span>
+            <div><div class="res-label">High</div><div class="res-sub">Above 1.5m</div></div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="ci">🏗️</div> Ceiling &amp; Structure</div>
+      <div class="row">
+        <div class="fg">
+          <label>Ornate or Architectural Ceilings?</label>
+          <div class="yn">
+            <button class="yn-btn y" onclick="ynF(this,'ornateCeilings','Yes')">Yes</button>
+            <button class="yn-btn n" onclick="ynF(this,'ornateCeilings','No')">No</button>
+          </div>
+        </div>
+        <div class="fg"><label>Asbestos Cuts — No. of</label><input type="number" id="asbetosCuts" placeholder="0" min="0" /></div>
+      </div>
+      <div class="row">
+        <div class="fg"><label>No. of Shelves to Cut (multi-level)</label><input type="number" id="shelvesToCut" placeholder="0" min="0" /></div>
+        <div class="fg">
+          <label>Shelf Type</label>
+          <select id="shelfType">
+            <option value="">Select…</option>
+            <option>Timber</option>
+            <option>Steel</option>
+            <option>Concrete</option>
+            <option>Plasterboard</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg">
+        <label>Double Ceiling Cavity?</label>
+        <div class="yn">
+          <button class="yn-btn y" onclick="ynF(this,'doubleCeilingCavity','Yes')">Yes</button>
+          <button class="yn-btn n" onclick="ynF(this,'doubleCeilingCavity','No')">No</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /step 2 -->
+
+  <!-- ══ STEP 3 · Installation Items ════════════════════════ -->
+  <div class="step-panel" id="panel-3">
+    <div class="card">
+      <div class="card-title"><div class="ci">🧰</div> Additional Items Required to Complete Installation</div>
+      <div class="card-note">ICA to complete — select all that apply</div>
+
+      <div class="sub-hd">Equipment &amp; Accessories</div>
+      <div class="chips">
+        <label class="chip multi" onclick="multi(event,this)"><input type="checkbox" name="addItems" value="Ladder over 4 mtrs"> Ladder over 4 mtrs</label>
+        <label class="chip multi" onclick="multi(event,this)"><input type="checkbox" name="addItems" value="Vortex Kit w/ I/S"> Vortex Kit w/ I/S</label>
+        <label class="chip multi" onclick="multi(event,this)"><input type="checkbox" name="addItems" value="Vortex Kit w/o I/S"> Vortex Kit w/o I/S</label>
+        <label class="chip multi" onclick="multi(event,this)"><input type="checkbox" name="addItems" value="Intelli Switch"> Intelli Switch</label>
+        <label class="chip multi" onclick="multi(event,this)"><input type="checkbox" name="addItems" value="Concrete Cutter Req'd"> Concrete Cutter Req'd</label>
+        <label class="chip multi" onclick="multi(event,this)"><input type="checkbox" name="addItems" value="Venting w/ Louvered Grill"> Venting w/ Louvered Grill</label>
+        <label class="chip multi" onclick="multi(event,this)"><input type="checkbox" name="addItems" value="Venting w/ Egg Crate Grill"> Venting w/ Egg Crate Grill</label>
+        <label class="chip multi" onclick="multi(event,this)"><input type="checkbox" name="addItems" value="Summer Kit"> Summer Kit</label>
+        <label class="chip multi" onclick="multi(event,this)"><input type="checkbox" name="addItems" value="SETA Filters"> SETA Filters</label>
+        <label class="chip multi" onclick="multi(event,this)"><input type="checkbox" name="addItems" value="Roof Penetration"> Roof Penetration</label>
+        <label class="chip multi" onclick="multi(event,this)"><input type="checkbox" name="addItems" value="Fresh Air Vent"> Fresh Air Vent</label>
+        <label class="chip multi" onclick="multi(event,this)"><input type="checkbox" name="addItems" value="Heat Transfer"> Heat Transfer</label>
+        <label class="chip multi" onclick="multi(event,this)"><input type="checkbox" name="addItems" value="Sonair Ventilation"> Sonair Ventilation</label>
+        <label class="chip multi" onclick="multi(event,this)"><input type="checkbox" name="addItems" value="Nobo Heater"> Nobo Heater</label>
+      </div>
+
+      <div class="row" style="margin-top:16px;">
+        <div class="fg"><label>No. of Louvered Grills</label><input type="number" id="numLouverGrills" placeholder="0" min="0" /></div>
+        <div class="fg"><label>No. of Egg Crate Grills</label><input type="number" id="numEggCrateGrills" placeholder="0" min="0" /></div>
+      </div>
+
+      <div class="fg" style="margin-top:8px;">
+        <label>Protection Type on Switchboard</label>
+        <div class="res-grid" style="max-width:360px;">
+          <label class="res-opt" onclick="pickCard(this,'switchProt')">
+            <input type="radio" name="switchProt" value="Fuse">
+            <span class="res-icon">⚡</span><div class="res-label">Fuse</div>
+          </label>
+          <label class="res-opt" onclick="pickCard(this,'switchProt')">
+            <input type="radio" name="switchProt" value="Circuit Breaker">
+            <span class="res-icon">🔌</span><div class="res-label">Circuit Breaker</div>
+          </label>
+        </div>
+      </div>
+
+      <div class="fg" style="margin-top:14px;">
+        <label>Any Other Height Access Requirements — Details</label>
+        <textarea id="heightAccessDetails" placeholder="Describe any additional height access requirements…" rows="3"></textarea>
+      </div>
+    </div>
+  </div><!-- /step 3 -->
+
+  <!-- ══ STEP 4 · Health & Safety ═══════════════════════════ -->
+  <div class="step-panel" id="panel-4">
+    <div class="card">
+      <div class="card-title"><div class="ci">⛑️</div> Health and Safety Checklist</div>
+      <div id="hsWrap"><!-- built by JS --></div>
+    </div>
+  </div><!-- /step 4 -->
+
+  <!-- ══ STEP 5 · Calculations ══════════════════════════════ -->
+  <div class="step-panel" id="panel-5">
+
+    <div class="card">
+      <div class="card-title"><div class="ci">📐</div> Home Calculations</div>
+      <div class="warn-note">ℹ️ Not required for Sonair installations</div>
+      <div class="row">
+        <div class="fg"><label>Total Floor Area (m²)</label><input type="number" id="floorArea" placeholder="e.g. 180" min="0" oninput="calcVolume()" /></div>
+        <div class="fg"><label>Wall Height (m)</label><input type="number" id="wallHeight" placeholder="2.4" min="1" step="0.1" value="2.4" oninput="calcVolume()" /></div>
+      </div>
+      <div class="row x1"><div class="fg">
+        <label>Volume of House (m³) — auto-calculated</label>
+        <input type="text" id="houseVolume" readonly placeholder="Enter floor area and wall height above" />
+      </div></div>
+      <div class="sub-hd">Minimum 3 Air Changes per Hour</div>
+      <div class="calc-grid">
+        <div class="calc-card">
+          <div class="calc-title">One Fan @ 780 m³</div>
+          <div class="calc-val" id="janusAC">—</div>
+          <div class="calc-unit">air changes / hr</div>
+        </div>
+        <div class="calc-card">
+          <div class="calc-title">Two Fans @ 1560 m³</div>
+          <div class="calc-val" id="arizonaAC">—</div>
+          <div class="calc-unit">air changes / hr</div>
+        </div>
+        <div class="calc-card">
+          <div class="calc-title">Three Fans @ 2340 m³</div>
+          <div class="calc-val" id="phoenixAC">—</div>
+          <div class="calc-unit">air changes / hr</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="ci">🌀</div> System Selection</div>
+      <div class="row x1"><div class="fg">
+        <label>System</label>
+        <select id="system">
+          <option value="">Select system…</option>
+          <option>Janus</option>
+          <option>Arizona</option>
+          <option>Phoenix</option>
+          <option>Sonair</option>
+          <option>Heat Pump</option>
+          <option>Other</option>
+        </select>
+      </div></div>
+      <div class="fg" style="margin-top:8px;">
+        <label>Levels and Number of Vents</label>
+        <div class="res-grid x3">
+          <label class="res-opt" onclick="pickStoreys(this,'1')">
+            <input type="radio" name="storeys" value="1">
+            <span class="res-icon">🏠</span><div class="res-label">1 Storey</div>
+          </label>
+          <label class="res-opt" onclick="pickStoreys(this,'2')">
+            <input type="radio" name="storeys" value="2">
+            <span class="res-icon">🏢</span><div class="res-label">2 Storey</div>
+          </label>
+          <label class="res-opt" onclick="pickStoreys(this,'3')">
+            <input type="radio" name="storeys" value="3">
+            <span class="res-icon">🏗️</span><div class="res-label">3 Storey</div>
+          </label>
+        </div>
+        <!-- Vent count inputs — revealed by storey selection -->
+        <div id="ventSection" style="display:none; margin-top:12px;">
+          <div id="ventRow1" class="row x1" style="display:none;">
+            <div class="fg"><label>No. of Vents</label><input type="number" id="ventSingle" placeholder="0" min="0" /></div>
+          </div>
+          <div id="ventRow2" class="row" style="display:none;">
+            <div class="fg"><label>Up</label><input type="number" id="ventUp2" placeholder="0" min="0" /></div>
+            <div class="fg"><label>Down</label><input type="number" id="ventDown2" placeholder="0" min="0" /></div>
+          </div>
+          <div id="ventRow3" class="row x3" style="display:none;">
+            <div class="fg"><label>Up</label><input type="number" id="ventUp3" placeholder="0" min="0" /></div>
+            <div class="fg"><label>Mid</label><input type="number" id="ventMid3" placeholder="0" min="0" /></div>
+            <div class="fg"><label>Down</label><input type="number" id="ventDown3" placeholder="0" min="0" /></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /step 5 -->
+
+  <!-- ══ STEP 6 · Installation Details ═════════════════════ -->
+  <div class="step-panel" id="panel-6">
+
+    <div class="card">
+      <div class="card-title"><div class="ci">📅</div> Installation Details</div>
+      <div class="row">
+        <div class="fg"><label>Installation Date</label><input type="date" id="installDate" /></div>
+        <div class="fg"><label>Time</label><input type="time" id="installTime" /></div>
+      </div>
+      <div class="row">
+        <div class="fg"><label>Job #</label><input type="text" id="jobNumber" placeholder="Job number" /></div>
+        <div class="fg"><label>ICA</label><input type="text" id="ica" placeholder="ICA name" /></div>
+      </div>
+      <div class="row">
+        <div class="fg"><label>ICA Ph #</label><input type="tel" id="icaPhone" placeholder="Phone number" /></div>
+        <div class="fg"><label>Date of First Appointment</label><input type="date" id="firstApptDate" /></div>
+      </div>
+      <div class="row x1"><div class="fg"><label>Installer</label><input type="text" id="installer" placeholder="Installer name" /></div></div>
+      <div class="row">
+        <div class="fg">
+          <label>Pre-Install Check Required?</label>
+          <div class="yn">
+            <button class="yn-btn y" onclick="ynF(this,'preInstallCheck','Yes');toggleEl('preReasonRow',true)">Yes</button>
+            <button class="yn-btn n" onclick="ynF(this,'preInstallCheck','No');toggleEl('preReasonRow',false)">No</button>
+          </div>
+        </div>
+      </div>
+      <div class="row x1" id="preReasonRow" style="display:none;">
+        <div class="fg"><label>Reason for Pre-Install Check</label><textarea id="preInstallReason" placeholder="Describe reason…" rows="3"></textarea></div>
+      </div>
+      <div class="row x1"><div class="fg"><label>To Collect</label><textarea id="toCollect" placeholder="Items to collect prior to installation…" rows="3"></textarea></div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="ci">📧</div> Confirmation</div>
+      <div class="fg"><label>Confirm Email for PDF</label><input type="email" id="confirmEmail" placeholder="customer@email.com" /></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="ci">✍️</div> Assessor / ICA Signature</div>
+      <div class="sig-wrap">
+        <canvas class="sig-canvas" id="assessorCanvas"></canvas>
+        <button class="sig-clear" onclick="clearSig('assessor')">Clear</button>
+        <div class="sig-ph" id="assessorPh">Sign here</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="ci">📤</div> Send Assessment</div>
+      <div class="cfg-banner" id="cfgBanner">
+        <strong>⚙️ Webhook not yet configured.</strong> Open this file, find <code>CONFIG.webhookUrl</code> in the &lt;script&gt; block, and replace the placeholder with your Power Automate HTTP trigger URL. Until then use <em>Download PDF</em>.
+      </div>
+      <div class="send-actions">
+        <button class="btn btn-outline" onclick="downloadPDF()">⬇&nbsp; Download PDF</button>
+        <button class="btn btn-green"   onclick="submitForm()">📧&nbsp; Submit &amp; Send to Office</button>
+      </div>
+    </div>
+
+  </div><!-- /step 6 -->
+
+</div><!-- /main -->
+
+<div class="nav-bar">
+  <button class="btn btn-secondary" id="btnBack" style="display:none" onclick="prevStep()">← Back</button>
+  <button class="btn btn-primary"   id="btnNext" onclick="nextStep()">Next →</button>
+</div>
+
+<script>
+/* ─── CONFIG ─────────────────────────────────────────────── */
+const CONFIG = {
+  webhookUrl:  'https://default75616d65c0ac46a2b4df2a6e91309b.8d.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/c313c02915544f89b347dccc8ec77f9d/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=7kEqngmTnLTh3pnZX9-uIXwZF5whTVUVEEqSlWtyJ38',
+  companyName: 'HRV NZ Limited',
+};
+
+/* ─── STATE ──────────────────────────────────────────────── */
+let step = 1;
+const TOTAL = 6;
+let LOGO_DATA = '';
+const S = {};
+
+/* ─── H&S ITEMS ──────────────────────────────────────────── */
+const HS_ITEMS = [
+  { id: 'hs1', label: 'Any driveway obstacles?' },
+  { id: 'hs2', label: 'Additional job difficulty?' },
+  { id: 'hs3', label: 'Does the property have dogs?' },
+  { id: 'hs4', label: 'Any obvious hazards?' },
+  { id: 'hs5', label: 'Building site?' },
+  { id: 'hs6', label: 'Additional building work required?' },
+  { id: 'hs7', label: 'Special requirements / tools?' },
+];
+
+/* ─── INIT ───────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  (async () => {
+    try {
+      const resp = await fetch('HRV2.jpg');
+      const blob = await resp.blob();
+      LOGO_DATA = await new Promise(res => {
+        const fr = new FileReader();
+        fr.onload = e => res(e.target.result);
+        fr.readAsDataURL(blob);
+      });
+    } catch(e) { console.warn('Logo not loaded:', e); }
+  })();
+
+  buildHSChecklist();
+
+  // Pre-fill fields from URL query params
+  // e.g. ?cus=Jane+Smith&adr=12+Main+St&mob=021000000&eml=jane@email.com
+  const _params = new URLSearchParams(window.location.search);
+  const _urlMap = { cus: 'cName', adr: 'cAddr', mob: 'cMobile', eml: 'cEmail' };
+  Object.entries(_urlMap).forEach(([param, id]) => {
+    const v = _params.get(param);
+    if (v) {
+      document.getElementById(id).value = v;
+      if (id === 'cEmail') document.getElementById('confirmEmail').value = v;
+    }
+  });
+
+  const configured = CONFIG.webhookUrl !== 'YOUR_POWER_AUTOMATE_WEBHOOK_URL';
+  document.getElementById('cfgBanner').style.display = configured ? 'none' : 'block';
+
+  updateNav();
+});
+
+/* ─── BUILD H&S CHECKLIST ────────────────────────────────── */
+function buildHSChecklist() {
+  const wrap = document.getElementById('hsWrap');
+  HS_ITEMS.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'hs-item';
+    div.innerHTML = `
+      <div class="hs-row">
+        <span class="hs-label">${item.label}</span>
+        <div class="yn">
+          <button class="yn-btn y" onclick="ynHS(this,'${item.id}','Yes')">Yes</button>
+          <button class="yn-btn n" onclick="ynHS(this,'${item.id}','No')">No</button>
+        </div>
+      </div>
+      <div class="hs-comment">
+        <textarea id="${item.id}_comment" placeholder="Comments…" rows="2"></textarea>
+      </div>`;
+    wrap.appendChild(div);
+  });
+}
+
+function ynHS(btn, key, val) {
+  btn.closest('.yn').querySelectorAll('.yn-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  S[key] = val;
+}
+
+/* ─── CALCULATIONS ───────────────────────────────────────── */
+function calcVolume() {
+  const area = parseFloat(document.getElementById('floorArea').value) || 0;
+  const h    = parseFloat(document.getElementById('wallHeight').value) || 0;
+  const vol  = area * h;
+  document.getElementById('houseVolume').value = vol > 0 ? vol.toFixed(1) + ' m³' : '';
+
+  [
+    { elId: 'janusAC',   capacity: 780  },
+    { elId: 'arizonaAC', capacity: 1560 },
+    { elId: 'phoenixAC', capacity: 2340 },
+  ].forEach(({ elId, capacity }) => {
+    const el   = document.getElementById(elId);
+    const card = el.closest('.calc-card');
+    if (vol > 0) {
+      const ac = capacity / vol;
+      el.textContent = ac.toFixed(2);
+      card.classList.toggle('pass', ac >= 3);
+    } else {
+      el.textContent = '—';
+      card.classList.remove('pass');
+    }
+  });
+}
+
+/* ─── UI HELPERS ─────────────────────────────────────────── */
+function ynF(btn, key, val) {
+  btn.closest('.yn').querySelectorAll('.yn-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  S[key] = val;
+}
+
+function pickCard(el, group) {
+  document.querySelectorAll(`[name="${group}"]`).forEach(inp => inp.closest('.res-opt').classList.remove('sel'));
+  el.classList.add('sel');
+  el.querySelector('input').checked = true;
+}
+
+function pickStoreys(el, n) {
+  pickCard(el, 'storeys');
+  document.getElementById('ventSection').style.display = 'block';
+  ['ventRow1','ventRow2','ventRow3'].forEach(id => document.getElementById(id).style.display = 'none');
+  document.getElementById(`ventRow${n}`).style.display = '';
+}
+
+function multi(e, el) {
+  e.preventDefault();
+  el.classList.toggle('sel');
+  el.querySelector('input').checked = el.classList.contains('sel');
+}
+
+function toggleEl(id, show) {
+  document.getElementById(id).style.display = show ? 'block' : 'none';
+}
+
+/* ─── SIGNATURE PAD ──────────────────────────────────────── */
+const pads = {};
+
+function initPad(canvasId, key) {
+  if (pads[key]) return;
+  const cv  = document.getElementById(canvasId);
+  const ctx = cv.getContext('2d');
+  cv.width  = cv.offsetWidth  * (window.devicePixelRatio || 1);
+  cv.height = cv.offsetHeight * (window.devicePixelRatio || 1);
+  ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+  ctx.strokeStyle = '#1C1C1E'; ctx.lineWidth = 2;
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  let drawing = false, drawn = false;
+  const pos = e => {
+    const r = cv.getBoundingClientRect();
+    const src = e.touches ? e.touches[0] : e;
+    return { x: (src.clientX - r.left) * cv.offsetWidth / r.width, y: (src.clientY - r.top) * cv.offsetHeight / r.height };
+  };
+  const start = e => { e.preventDefault(); drawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
+  const move  = e => {
+    if (!drawing) return; e.preventDefault();
+    const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke();
+    if (!drawn) { drawn = true; document.getElementById(`${key}Ph`).style.display = 'none'; }
+  };
+  const stop = () => { drawing = false; };
+  cv.addEventListener('mousedown', start); cv.addEventListener('mousemove', move);
+  cv.addEventListener('mouseup', stop);    cv.addEventListener('mouseleave', stop);
+  cv.addEventListener('touchstart', start, { passive: false });
+  cv.addEventListener('touchmove',  move,  { passive: false });
+  cv.addEventListener('touchend', stop);
+  pads[key] = { cv, ctx, reset: () => { drawn = false; } };
+}
+
+function clearSig(key) {
+  const p = pads[key]; if (!p) return;
+  p.ctx.clearRect(0, 0, p.cv.width, p.cv.height);
+  p.reset();
+  document.getElementById(`${key}Ph`).style.display = '';
+}
+
+/* ─── STEP NAVIGATION ────────────────────────────────────── */
+function goTo(n) {
+  if (n < 1 || n > TOTAL) return;
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.ps').forEach(p => {
+    const s = +p.dataset.step;
+    p.classList.remove('active','done');
+    if (s === n) p.classList.add('active');
+    else if (s < n) p.classList.add('done');
+  });
+  document.getElementById(`panel-${n}`).classList.add('active');
+  step = n;
+  updateNav();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (n === 6) setTimeout(() => initPad('assessorCanvas', 'assessor'), 80);
+  const ps = document.querySelector(`.ps[data-step="${n}"]`);
+  if (ps) ps.scrollIntoView({ block: 'nearest', inline: 'center' });
+}
+function nextStep() { goTo(step + 1); }
+function prevStep() { goTo(step - 1); }
+function updateNav() {
+  document.getElementById('btnBack').style.display = step > 1     ? 'block' : 'none';
+  document.getElementById('btnNext').style.display = step < TOTAL ? 'block' : 'none';
+}
+
+/* ─── COLLECT DATA ───────────────────────────────────────── */
+function collect() {
+  const v     = id   => (document.getElementById(id)?.value || '').trim();
+  const r     = name => document.querySelector(`[name="${name}"]:checked`)?.value || '';
+  const chips = name => Array.from(document.querySelectorAll(`[name="${name}"]:checked`)).map(e => e.value);
+
+  const hsItems = HS_ITEMS.map(item => ({
+    label:    item.label,
+    answer:   S[item.id] || '—',
+    comments: v(`${item.id}_comment`),
+  }));
+
+  return {
+    customerName: v('cName'),         address:      v('cAddr'),
+    homePhone:    v('cHomePhone'),    workPhone:    v('cWorkPhone'),
+    mobile:       v('cMobile'),       email:        v('confirmEmail') || v('cEmail'),
+
+    homeAge:             v('homeAge'),
+    cladding:            v('cladding'),
+    roofType:            v('roofType'),
+    ceilingType:         v('ceilingType'),
+    texturedCeiling:     S.texturedCeiling     || '—',
+    numCavities:         v('numCavities'),
+    manholeL:            v('manholeL'),
+    manholeW:            v('manholeW'),
+    manholeLifted:       S.manholeLifted        || '—',
+    moistureSigns:       S.moistureSigns        || '—',
+    manholeRequired:     S.manholeRequired      || '—',
+    manholeDate:         v('manholeDate'),
+    roofObstructions:    S.roofObstructions     || '—',
+    roofCavityHeight:    r('roofCavityHeight'),
+    ornateCeilings:      S.ornateCeilings       || '—',
+    asbetosCuts:         v('asbetosCuts'),
+    shelvesToCut:        v('shelvesToCut'),
+    shelfType:           v('shelfType'),
+    doubleCeilingCavity: S.doubleCeilingCavity  || '—',
+
+    additionalItems:       chips('addItems'),
+    numLouverGrills:       v('numLouverGrills'),
+    numEggCrateGrills:     v('numEggCrateGrills'),
+    switchboardProtection: r('switchProt'),
+    heightAccessDetails:   v('heightAccessDetails'),
+
+    hsItems,
+
+    floorArea:   v('floorArea'),
+    wallHeight:  v('wallHeight'),
+    houseVolume: v('houseVolume'),
+    janusAC:     document.getElementById('janusAC').textContent,
+    arizonaAC:   document.getElementById('arizonaAC').textContent,
+    phoenixAC:   document.getElementById('phoenixAC').textContent,
+    system:      v('system'),
+    storeys:    r('storeys'),
+    ventCounts: (() => {
+      const s = r('storeys');
+      if (s === '1') return { single: v('ventSingle') };
+      if (s === '2') return { up: v('ventUp2'), down: v('ventDown2') };
+      if (s === '3') return { up: v('ventUp3'), mid: v('ventMid3'), down: v('ventDown3') };
+      return {};
+    })(),
+
+    installDate:      v('installDate'),
+    installTime:      v('installTime'),
+    jobNumber:        v('jobNumber'),
+    ica:              v('ica'),
+    icaPhone:         v('icaPhone'),
+    firstApptDate:    v('firstApptDate'),
+    installer:        v('installer'),
+    preInstallCheck:  S.preInstallCheck || '—',
+    preInstallReason: v('preInstallReason'),
+    toCollect:        v('toCollect'),
+
+    assessorSig: pads['assessor']?.cv.toDataURL('image/png') || '',
+  };
+}
+
+/* ─── PDF ────────────────────────────────────────────────── */
+async function ensureLogo() {
+  if (LOGO_DATA) return;
+  try {
+    const resp = await fetch('HRV2.jpg');
+    const blob = await resp.blob();
+    LOGO_DATA = await new Promise(res => { const fr = new FileReader(); fr.onload = e => res(e.target.result); fr.readAsDataURL(blob); });
+  } catch(e) {}
+}
+
+function makePDF(d) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+  const W = 210, M = 13, RW = W - M * 2, col2 = W / 2 + 4;
+  let y = 0;
+
+  const rgb  = (...c) => doc.setTextColor(...c);
+  const fill = (...c) => doc.setFillColor(...c);
+  const draw = (...c) => doc.setDrawColor(...c);
+  const f    = (sz, st = 'normal') => { doc.setFontSize(sz); doc.setFont('helvetica', st); };
+  const val  = v => (v && v !== '—' && v !== '') ? v : '—';
+  const refNo = `IA-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.floor(Math.random()*9000+1000)}`;
+
+  /* Header */
+  fill(8,126,188); doc.rect(0, 0, W, 28, 'F');
+  f(13,'bold'); rgb(255,255,255); doc.text('INSTALLATION ASSESSMENT FORM', M, 10);
+  f(7,'normal');
+  doc.text('HRV NZ Limited  ·  Ventilation / Sonair / Heat Pump', M, 16);
+  doc.text('36 Victoria Street, Onehunga, Auckland, 1061  ·  0800 478 123  ·  hrv.co.nz', M, 21);
+  fill(255,255,255); doc.roundedRect(158, 4, 40, 20, 2, 2, 'F');
+  if (LOGO_DATA) { doc.addImage(LOGO_DATA, 'JPEG', 159, 5, 38, 18); }
+  else { f(13,'bold'); rgb(8,126,188); doc.text('HRV', 178, 16.5, { align: 'center' }); }
+  fill(242,242,247); doc.rect(0, 28, W, 7, 'F');
+  f(7.5,'normal'); rgb(108,108,112);
+  doc.text(`Ref: ${refNo}  ·  ${new Date().toLocaleString('en-NZ')}`, M, 33);
+  y = 40;
+
+  const sec = title => {
+    if (y > 262) { doc.addPage(); y = 14; }
+    fill(8,126,188); doc.rect(M, y, RW, 6.5, 'F');
+    f(8,'bold'); rgb(255,255,255); doc.text(title, M + 2, y + 4.5);
+    y += 9;
+  };
+
+  const fld = (label, value, x, maxW) => {
+    f(6.5,'normal'); rgb(108,108,112); doc.text(label.toUpperCase(), x, y);
+    f(9,'bold');     rgb(28,28,30);    doc.text(doc.splitTextToSize(val(value), maxW || 80)[0], x, y + 4);
+  };
+
+  const twoCol = pairs => {
+    const half = Math.ceil(pairs.length / 2);
+    const L = pairs.slice(0, half), R = pairs.slice(half);
+    const startY = y;
+    L.forEach(([lb, vl]) => { fld(lb, vl, M,    85); y += 10; });
+    y = startY;
+    R.forEach(([lb, vl]) => { fld(lb, vl, col2, 85); y += 10; });
+    y = startY + Math.max(L.length, R.length) * 10 + 2;
+  };
+
+  const multiLine = (label, value) => {
+    if (!value) return;
+    f(6.5,'normal'); rgb(108,108,112); doc.text(label.toUpperCase(), M, y); y += 4;
+    f(8,'normal'); rgb(28,28,30);
+    const ls = doc.splitTextToSize(value, RW);
+    doc.text(ls, M, y); y += ls.length * 4 + 4;
+  };
+
+  /* ── Customer ── */
+  sec('CUSTOMER DETAILS');
+  twoCol([
+    ['Customer Name', d.customerName], ['Address',    d.address],
+    ['Home Phone',    d.homePhone],    ['Work Phone', d.workPhone],
+    ['Mobile',        d.mobile],       ['Email',      d.email],
+  ]);
+
+  /* ── Home Details ── */
+  sec('HOME DETAILS');
+  twoCol([
+    ['Age of Home',      d.homeAge ? d.homeAge + ' years' : '—'],
+    ['Cladding',         d.cladding],
+    ['Roof Type',        d.roofType],
+    ['Ceiling Type',     d.ceilingType],
+    ['Textured Ceiling', d.texturedCeiling],
+    ['# of Cavities',    d.numCavities],
+  ]);
+
+  /* ── Manhole & Roof Cavity ── */
+  sec('MANHOLE & ROOF CAVITY');
+  twoCol([
+    ['Manhole Length (mm)', d.manholeL || '—'],  ['Manhole Width (mm)',   d.manholeW || '—'],
+    ['Manhole Lifted',      d.manholeLifted],     ['Manhole Required',     d.manholeRequired],
+    ['Moisture Signs',      d.moistureSigns],     ['Manhole Booked Date',  d.manholeDate || '—'],
+    ['Roof Obstructions',   d.roofObstructions],  ['Roof Cavity Height',   d.roofCavityHeight || '—'],
+  ]);
+
+  /* ── Ceiling & Structure ── */
+  sec('CEILING & STRUCTURE');
+  twoCol([
+    ['Ornate Ceilings',       d.ornateCeilings],
+    ['Asbestos Cuts — No.',   d.asbetosCuts || '0'],
+    ['Shelves to Cut',        d.shelvesToCut || '0'],
+    ['Shelf Type',            d.shelfType],
+    ['Double Ceiling Cavity', d.doubleCeilingCavity],
+  ]);
+
+  /* ── Additional Install Items ── */
+  sec('ADDITIONAL INSTALLATION ITEMS');
+  if (d.additionalItems.length) {
+    f(6.5,'normal'); rgb(108,108,112); doc.text('ITEMS SELECTED', M, y); y += 4;
+    f(8,'normal'); rgb(28,28,30);
+    const ls = doc.splitTextToSize(d.additionalItems.join(', '), RW);
+    doc.text(ls, M, y); y += ls.length * 4 + 4;
+  }
+  twoCol([
+    ['Louvered Grills',        d.numLouverGrills   || '0'],
+    ['Egg Crate Grills',       d.numEggCrateGrills || '0'],
+    ['Switchboard Protection', d.switchboardProtection || '—'],
+  ]);
+  multiLine('Height Access Details', d.heightAccessDetails);
+
+  /* ── H&S Checklist ── */
+  sec('HEALTH & SAFETY CHECKLIST');
+  fill(242,242,247); doc.rect(M, y, RW, 6, 'F');
+  f(7,'bold'); rgb(108,108,112);
+  doc.text('CHECK ITEM', M + 2, y + 4);
+  doc.text('ANSWER',     M + 103, y + 4);
+  doc.text('COMMENTS',   M + 123, y + 4);
+  y += 7;
+  d.hsItems.forEach(item => {
+    if (y > 272) { doc.addPage(); y = 14; }
+    const labelLines   = doc.splitTextToSize(item.label, 96);
+    const commentLines = item.comments ? doc.splitTextToSize(item.comments, 65) : [];
+    const rowH = Math.max(labelLines.length, commentLines.length || 1) * 4 + 5;
+
+    f(7.5,'normal'); rgb(28,28,30);
+    doc.text(labelLines, M + 2, y + 3.5);
+
+    if (item.answer !== '—') {
+      const col = item.answer === 'Yes' ? [52,199,89] : [255,59,48];
+      fill(...col); doc.roundedRect(M + 102, y + 1, 16, 5.5, 1, 1, 'F');
+      f(7,'bold'); rgb(255,255,255);
+      doc.text(item.answer, M + 110, y + 4.8, { align: 'center' });
+    }
+
+    if (commentLines.length) {
+      f(7,'normal'); rgb(80,80,80);
+      doc.text(commentLines, M + 123, y + 3.5);
+    }
+
+    draw(229,229,234); doc.line(M, y + rowH, W - M, y + rowH);
+    y += rowH;
+  });
+  y += 4;
+
+  /* ── Home Calculations ── */
+  sec('HOME CALCULATIONS');
+  twoCol([
+    ['Floor Area',       d.floorArea  ? d.floorArea + ' m²' : '—'],
+    ['Wall Height',      d.wallHeight ? d.wallHeight + ' m'  : '—'],
+    ['House Volume',     d.houseVolume || '—'],
+    ['System Selected',  d.system || '—'],
+    ['Storeys',          d.storeys ? d.storeys + ' Storey' : '—'],
+    ['Levels / Vents',   (() => {
+      const s = d.storeys, c = d.ventCounts;
+      if (s === '1') return `${c.single || '0'} vent(s)`;
+      if (s === '2') return `Up: ${c.up||'0'}, Down: ${c.down||'0'}`;
+      if (s === '3') return `Up: ${c.up||'0'}, Mid: ${c.mid||'0'}, Down: ${c.down||'0'}`;
+      return '—';
+    })()],
+  ]);
+
+  if (d.houseVolume) {
+    if (y > 250) { doc.addPage(); y = 14; }
+    const cW = (RW - 6) / 3;
+    [
+      ['ONE FAN @ 780 m³',    d.janusAC],
+      ['TWO FANS @ 1560 m³',  d.arizonaAC],
+      ['THREE FANS @ 2340 m³',d.phoenixAC],
+    ].forEach(([lb, vl], i) => {
+      const x = M + i * (cW + 3);
+      fill(8,126,188); doc.roundedRect(x, y, cW, 14, 2, 2, 'F');
+      f(6.5,'bold'); rgb(255,255,255); doc.text(lb, x + cW / 2, y + 5, { align: 'center' });
+      f(9,'bold'); doc.text(vl !== '—' ? vl + ' AC/hr' : '—', x + cW / 2, y + 11, { align: 'center' });
+    });
+    y += 18;
+  }
+
+  /* ── System Selected — prominent banner ── */
+  if (y > 240) { doc.addPage(); y = 14; }
+  const sysName = d.system || 'NOT SELECTED';
+  fill(8,126,188); doc.roundedRect(M, y, RW, 30, 3, 3, 'F');
+  f(7,'bold'); rgb(180,225,250);
+  doc.text('SYSTEM TO BE INSTALLED', M + RW / 2, y + 8, { align: 'center' });
+  f(22,'bold'); rgb(255,255,255);
+  doc.text(sysName.toUpperCase(), M + RW / 2, y + 21, { align: 'center' });
+  y += 33;
+
+  const _ventStr = (() => {
+    const s = d.storeys, c = d.ventCounts || {};
+    if (s === '1') return `${c.single || '0'} vent(s)`;
+    if (s === '2') return `Up: ${c.up||'0'}  |  Down: ${c.down||'0'}`;
+    if (s === '3') return `Up: ${c.up||'0'}  |  Mid: ${c.mid||'0'}  |  Down: ${c.down||'0'}`;
+    return '—';
+  })();
+  if (d.storeys) {
+    fill(224,242,251); doc.roundedRect(M, y, RW, 11, 2, 2, 'F');
+    f(9,'bold'); rgb(8,126,188);
+    doc.text(`${d.storeys} Storey   ·   Vents — ${_ventStr}`, M + RW / 2, y + 7.5, { align: 'center' });
+    y += 14;
+  }
+  y += 5;
+
+  /* ── Installation Details ── */
+  sec('INSTALLATION DETAILS');
+  twoCol([
+    ['Installation Date', d.installDate  || '—'], ['Time',              d.installTime  || '—'],
+    ['Job #',             d.jobNumber    || '—'], ['ICA',               d.ica          || '—'],
+    ['ICA Ph #',          d.icaPhone     || '—'], ['First Appt Date',   d.firstApptDate|| '—'],
+    ['Installer',         d.installer    || '—'], ['Pre-Install Check', d.preInstallCheck],
+  ]);
+  multiLine('Pre-Install Reason', d.preInstallReason);
+  multiLine('To Collect',         d.toCollect);
+
+  /* ── Signature ── */
+  if (y > 240) { doc.addPage(); y = 14; }
+  sec('SIGNATURE');
+  f(6.5,'normal'); rgb(108,108,112); doc.text('ASSESSOR / ICA', M, y); y += 3;
+  draw(229,229,234); doc.rect(M, y, RW / 2, 28);
+  if (d.assessorSig && d.assessorSig.length > 100) {
+    try { doc.addImage(d.assessorSig, 'PNG', M + 1, y + 1, RW / 2 - 2, 26); } catch(e) {}
+  }
+  y += 32;
+
+  /* Footer band */
+  fill(8,126,188); doc.rect(0, 287, W, 10, 'F');
+  f(7,'normal'); rgb(255,255,255);
+  doc.text('HRV NZ LIMITED — INSTALLATION ASSESSMENT', M, 293);
+  doc.text(`${refNo}  ·  ${new Date().toLocaleString('en-NZ')}`, W - M, 293, { align: 'right' });
+
+  return { doc, refNo };
+}
+
+/* ─── DOWNLOAD PDF ───────────────────────────────────────── */
+async function downloadPDF() {
+  showOverlay('Generating PDF…');
+  try {
+    await ensureLogo();
+    const d = collect();
+    const { doc, refNo } = makePDF(d);
+    doc.save(`HRV_Install_Assessment_${(d.customerName||'Customer').replace(/\s+/g,'_')}_${refNo}.pdf`);
+    toast('PDF downloaded ✓');
+  } catch(e) { console.error(e); toast('Error generating PDF — see console'); }
+  hideOverlay();
+}
+
+/* ─── SUBMIT TO POWER AUTOMATE ───────────────────────────── */
+async function submitForm() {
+  const d = collect();
+  if (!d.email) { toast('Please enter customer email in the last step'); return; }
+
+  showOverlay('Generating PDF…');
+  await ensureLogo();
+  let doc, refNo;
+  try { ({ doc, refNo } = makePDF(d)); }
+  catch(e) { hideOverlay(); toast('Error generating PDF'); return; }
+
+  const fileName = `HRV_Install_Assessment_${(d.customerName||'Customer').replace(/\s+/g,'_')}_${refNo}.pdf`;
+
+  if (CONFIG.webhookUrl === 'YOUR_POWER_AUTOMATE_WEBHOOK_URL') {
+    doc.save(fileName);
+    hideOverlay();
+    toast('Webhook not set — PDF downloaded. Add webhookUrl to CONFIG.');
+    return;
+  }
+
+  showOverlay('Sending to Power Automate…');
+  const pdfBase64 = doc.output('datauristring').split(',')[1];
+  const payload = {
+    formType:      'Installation Assessment',
+    customerName:  d.customerName,
+    address:       d.address,
+    customerEmail: d.email,
+    assessor:      d.installer || d.ica,
+    installDate:   d.installDate,
+    jobNumber:     d.jobNumber,
+    system:        d.system,
+    pdfFileName:   fileName,
+    pdfBase64:     pdfBase64,
+  };
+
+  try {
+    const resp = await fetch(CONFIG.webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    hideOverlay();
+    if (resp.ok || resp.status === 202) { toast('Assessment sent to Power Automate ✓'); }
+    else { throw new Error(`HTTP ${resp.status}`); }
+  } catch(e) {
+    console.error('Webhook failed:', e);
+    doc.save(fileName);
+    hideOverlay();
+    toast('Send failed — PDF downloaded as backup.');
+  }
+}
+
+/* ─── UTILITIES ──────────────────────────────────────────── */
+function showOverlay(msg) { document.getElementById('overlayMsg').textContent = msg; document.getElementById('overlay').classList.add('on'); }
+function hideOverlay()    { document.getElementById('overlay').classList.remove('on'); }
+let _t;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(_t); _t = setTimeout(() => el.classList.remove('show'), 3600);
+}
+</script>
+</body>
+</html>
