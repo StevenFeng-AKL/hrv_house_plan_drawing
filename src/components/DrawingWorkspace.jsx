@@ -33,7 +33,7 @@ export default function DrawingWorkspace({ quoteId, address, guid, s1, s2, d1, d
                             <h3>Background</h3>
                             <input id="background_file" typeof="file" type="file" className="background_image_file"
                                 accept=".png" style={{ display: 'none' }} />
-                            <a href="#" className="background_move_tool"
+                            <a href="#" className="background_choose_file_tool"
                                 onClick={(e) => { e.preventDefault(); document.getElementById('background_file').click(); }}>
                                 Choose File
                             </a>
